@@ -35,70 +35,95 @@ struct token;
 struct operator_;
 struct punctuation;
 
+// helpers for Ohm - capitalisation / padding;
+template < typename ...T >
+struct STAR : pad< star<T ...>, space_ > {};
+
+template < typename ... T >
+struct SEQ : pad< seq<T ...>, space_ > {};
+
+template < typename ... T >
+struct SOR : pad< sor<T ...>, space_ > {};
+
+template < typename ... T >
+struct OPT : pad< opt<T ...>, space_ > {};
+
+// NonEmptyListOf:
+template < typename T, typename P >
+struct NonEmptyListOf : list< pad<T, space_>, P >, star<space_> {};
+
+// ListOf:
+template < typename T, typename P >
+struct ListOf : opt< NonEmptyListOf<T,P> > {};
+
+//
+// Here comes the Ohm grammar in PEGTL parlance:
+//
+
 //  Grammars
 //    = Grammar*
-struct Grammars : star<Grammar> {};
+struct Grammars : STAR<Grammar> {};
 
 //  Grammar
 //    = ident SuperGrammar? "{" Rule* "}"
-struct Grammar  : seq< ident, opt<SuperGrammar>, one<'{'>, star<Rule>, one<'}'> > {};
+struct Grammar  : SEQ< ident, opt<SuperGrammar>, one<'{'>, star<Rule>, one<'}'> > {};
 
 //  SuperGrammar
 //    = "<:" ident
-struct SuperGrammar : seq< one<'<'>, one<':'>, ident > {};
+struct SuperGrammar : SEQ< one<'<'>, one<':'>, ident > {};
 
 //  Rule
 //    = ident Formals? ruleDescr? "="  RuleBody  -- define
 //    | ident Formals?            ":=" RuleBody  -- override
 //    | ident Formals?            "+=" RuleBody  -- extend
-struct Rule : sor<
+struct Rule : SOR<
 	seq< ident, opt<Formals>, opt<ruleDescr>,           one<'='>, RuleBody >,
 	seq< ident, opt<Formals>,                 one<':'>, one<'='>, RuleBody >,
 	seq< ident, opt<Formals>,                 one<'+'>, one<'='>, RuleBody >
 > {};
 
 //  RuleBody
-//    = "|"? NonemptyListOf<TopLevelTerm, "|">
-struct RuleBody : seq< 
+//    = "|"? NonEmptyListOf<TopLevelTerm, "|">
+struct RuleBody : SEQ< 
   opt< one<'|'> >, 
-  plus< list< TopLevelTerm, one<'|'> > >
+  NonEmptyListOf< TopLevelTerm, one<'|'> >
 > {};
 
 //  TopLevelTerm
 //    = Seq caseName  -- inline
 //    | Seq
-struct TopLevelTerm : sor< seq< Seq, caseName >, Seq > {}; 
+struct TopLevelTerm : SOR< seq< Seq, caseName >, Seq > {}; 
 
 //  Formals
 //    = "<" ListOf<ident, ","> ">"
-struct Formals : seq< 
+struct Formals : SEQ< 
   one<'<'>, 
-  list< ident, one<','> >,
+  ListOf< ident, one<','> >,
   one<'>'>
 > {};
 
 //  Params
 //    = "<" ListOf<Seq, ","> ">"
-struct Params : seq<
+struct Params : SEQ<
 	one<'<'>,
-	list< Seq, one<','> >,
+	ListOf< Seq, one<','> >,
 	one<'>'>
 > {};
 
 //  Alt
-//    = NonemptyListOf<Seq, "|">
-struct Alt : list< Seq, one<'|'> > {};
+//    = NonEmptyListOf<Seq, "|">
+struct Alt : NonEmptyListOf< Seq, one<'|'> > {};
 
 //  Seq
 //    = Iter*
-struct Seq : star<Iter> {};
+struct Seq : STAR<Iter> {};
 
 //  Iter
 //    = Pred "*"  -- star
 //    | Pred "+"  -- plus
 //    | Pred "?"  -- opt
 //    | Pred
-struct Iter : sor<
+struct Iter : SOR<
 	seq< Pred, one<'*'> >,
 	seq< Pred, one<'+'> >,
 	seq< Pred, one<'?'> >,
@@ -109,7 +134,7 @@ struct Iter : sor<
 //    = "~" Lex  -- not
 //    | "&" Lex  -- lookahead
 //    | Lex
-struct Pred : sor<
+struct Pred : SOR<
 	seq< one<'~'>, Lex >,
 	seq< one<'&'>, Lex >,
   Lex
@@ -118,7 +143,7 @@ struct Pred : sor<
 //  Lex
 //    = "#" Base  -- lex
 //    | Base
-struct Lex : sor<
+struct Lex : SOR<
 	seq< one<'#'>, Base >,
   Base
 > {};
@@ -128,7 +153,7 @@ struct Lex : sor<
 //    | oneCharTerminal ".." oneCharTerminal           -- range
 //    | terminal                                       -- terminal
 //    | "(" Alt ")"                                    -- paren
-struct Base : sor<
+struct Base : SOR<
 	seq< 
 		ident, 
 		opt<Params>, 
@@ -290,3 +315,4 @@ struct punctuation : sor<
 	one< ',' >,
 	string< '-', '-' >
 > {};
+
