@@ -1,6 +1,8 @@
 
 #include <pegtl.hpp>
 
+namespace Ohm {
+
 using namespace tao::TAOCPP_PEGTL_NAMESPACE;
 
 struct Grammars;
@@ -50,7 +52,7 @@ struct OPT : pad< opt<T ...>, space_ > {};
 
 // NonEmptyListOf:
 template < typename T, typename P >
-struct NonEmptyListOf : list< pad<T, space_>, P >, star<space_> {};
+struct NonEmptyListOf : pad< list< T, P >, space_ > {};
 
 // ListOf:
 template < typename T, typename P >
@@ -62,7 +64,7 @@ struct ListOf : opt< NonEmptyListOf<T,P> > {};
 
 //  Grammars
 //    = Grammar*
-struct Grammars : STAR<Grammar> {};
+struct Grammars : pad< until<eof,Grammar>, blank> {};
 
 //  Grammar
 //    = ident SuperGrammar? "{" Rule* "}"
@@ -205,7 +207,7 @@ struct caseName : seq<
 
 //  name  (a name)
 //    = nameFirst nameRest*
-struct name : seq< nameFirst, nameRest > {};
+struct name : seq< nameFirst, star<nameRest> > {};
 
 //  nameFirst
 //    = "_"
@@ -223,11 +225,11 @@ struct ident : name {};
 
 //  terminal
 //    = "\"" terminalChar* "\""
-struct terminal : seq< one<'\\'>, star<terminalChar>, one<'\\'> > {};
+struct terminal : seq< one<'"'>, star<terminalChar>, one<'"'> > {};
 
 //  oneCharTerminal
 //    = "\"" terminalChar "\""
-struct oneCharTerminal : seq< one<'\\'>, terminalChar, one<'\\'> > {};
+struct oneCharTerminal : seq< one<'"'>, terminalChar, one<'"'> > {};
 
 //  terminalChar
 //    = escapeChar
@@ -248,13 +250,13 @@ struct terminalChar : sor<
 //    | "\\u" hexDigit hexDigit hexDigit hexDigit  -- unicodeEscape
 //    | "\\x" hexDigit hexDigit                    -- hexEscape
 struct escapeChar : sor<
-	one<'\\'>,
-	one<'"'>,
-	one<'\''>,
-	one<'\b'>,
-	one<'\n'>,
-	one<'\r'>,
-	one<'\t'>,
+	string<'\\', '\\'>,
+	string<'\\', '"' >,
+	string<'\\', '\''>,
+	string<'\\', 'b' >,
+	string<'\\', 'n' >,
+	string<'\\', 'r' >,
+	string<'\\', 't' >,
 	seq< one<'\\'>, one<'u'>, xdigit, xdigit, xdigit, xdigit >,
 	seq< one<'\\'>, one<'x'>, xdigit, xdigit >
 > {};
@@ -315,4 +317,6 @@ struct punctuation : sor<
 	one< ',' >,
 	string< '-', '-' >
 > {};
+
+};
 
