@@ -94,7 +94,7 @@ struct RuleBody : SEQ<
 //  TopLevelTerm
 //    = Seq caseName  -- inline
 //    | Seq
-struct TopLevelTerm : SOR< seq< Seq, caseName >, Seq > {}; 
+struct TopLevelTerm : SEQ< Seq, opt<caseName> > {}; 
 
 //  Formals
 //    = "<" ListOf<ident, ","> ">"
@@ -181,10 +181,7 @@ struct ruleDescr : seq< one<'('>, ruleDescrText, one<')'> >{};
 
 //  ruleDescrText
 //    = (~")" any)*
-struct ruleDescrText : star< seq< 
-	not_at< one<')'> >,
-	any
-> >{};
+struct ruleDescrText : until< one<')'>, any > {};
 
 //  caseName
 //    = "--" (~"\n" space)* name (~"\n" space)* ("\n" | &"}")
