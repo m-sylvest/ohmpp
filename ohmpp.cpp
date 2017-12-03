@@ -1,61 +1,11 @@
-
-#include "ohm-grammar.cpp"
-
+#include "ohm-ast-builder.hpp"
+#if 1
+#include <vector>
 #include <iostream>
 #include <iomanip>
-#include <vector>
+#endif
 
 namespace pegtl = tao::TAOCPP_PEGTL_NAMESPACE;
-
-namespace Ohm {
-
-	template< typename Rule >
-	struct action : pegtl::nothing< Rule > 
-	{
-	};
-
-	template<> 
-	struct action< name >
-	{
-		template< typename Input >
-		static void apply( const Input& in, std::vector<std::vector<int>> &v )
-		{
-			std::cout << in.string() << std::endl;
-		}
-	};
-
-	template<> 
-	struct action< operator_ >
-	{
-		template< typename Input >
-		static void apply( const Input& in, std::vector<std::vector<int>> &v )
-		{
-			std::cout << in.string() << std::endl;
-		}
-	};
-
-	template<> 
-	struct action< escapeChar >
-	{
-		template< typename Input >
-		static void apply( const Input& in, std::vector<std::vector<int>> &v )
-		{
-			auto s = in.string();
-			std::cout << "escapeChar(" << s.size() << ")" << std::endl;
-			for (auto i = 0; i < s.length(); ++i)
-				std::cout << std::setw(2) << std::setfill('0') << std::hex << (int)s[i];
-
-			std::cout << std::endl;
-		}
-	};
-
-	template< typename Rule >
-	struct control : pegtl::normal< Rule >
-	{
-	};
-
-}
-
 
 int main( int argc, char *argv[] )
 {
@@ -75,7 +25,7 @@ int main( int argc, char *argv[] )
 				pegtl::must< 
 					pegtl::star< 
 						pegtl::seq<
-							pegtl::sor<Ohm::name,Ohm::escapeChar,Ohm::operator_>,
+							pegtl::sor<Ohm::GRM::caseName,Ohm::GRM::comment,Ohm::GRM::name,Ohm::GRM::escapeChar,Ohm::GRM::operator_,Ohm::GRM::terminal>,
 							pegtl::one<','>
 						>
 					>
@@ -97,3 +47,4 @@ int main( int argc, char *argv[] )
 	
 	return 0;
 }
+
