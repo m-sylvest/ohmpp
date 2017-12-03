@@ -16,7 +16,11 @@ namespace Ohm {
     struct Rule_Extend;
 		
     struct RuleBody;
+		
     struct TopLevelTerm;
+		struct TopLevelTerm_CaseName;
+		struct TopLevelTerm_Seq;
+		
     struct Formals;
     struct Params;
     struct Alt;
@@ -118,7 +122,10 @@ namespace Ohm {
     //  TopLevelTerm
     //    = Seq caseName  -- inline
     //    | Seq
-    struct TopLevelTerm : SEQ< Seq, opt<caseName> > {}; 
+		
+    struct TopLevelTerm : SOR< TopLevelTerm_CaseName, TopLevelTerm_Seq > {};
+		
+		struct TopLevelTerm_CaseName : seq< Seq, caseName > {}; 
 
     //  Formals
     //    = "<" ListOf<ident, ","> ">"
@@ -144,6 +151,8 @@ namespace Ohm {
     //    = Iter*
     struct Seq : STAR<Iter> {};
 
+		struct TopLevelTerm_Seq : Seq {}; 
+		
     //  Iter
     //    = Pred "*"  -- star
     //    | Pred "+"  -- plus
