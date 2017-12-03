@@ -8,16 +8,16 @@
 
 namespace Ohm 
 {
-	// Data structures for building the Abstract Syntax Tree for an Ohm grammar;
+	// Data structures for building the Abstract Syntax Tree of an Ohm grammar;
 	namespace AST 
 	{
 		using namespace std;
         
 		typedef struct {} Base;
 
-		typedef struct { bool hashPrefix; Base &base; } Lex;
-		typedef struct { string op; Lex lex; } Pred;
-		typedef struct { Pred pred; string op; } Iter;
+		typedef struct { bool hashPrefix; Base& base; } Lex;
+		typedef struct { string op; Lex& lex; } Pred;
+		typedef struct { Pred& pred; string op; } Iter;
 		typedef list<Iter> Seq;
 		typedef struct { Seq seq; string caseName; } TopLevelTerm;
 		typedef list<TopLevelTerm> RuleBody;
