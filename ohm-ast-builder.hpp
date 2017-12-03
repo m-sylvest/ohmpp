@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include <variant>
 
 namespace Ohm 
 {
@@ -32,8 +33,30 @@ namespace Ohm
 		typedef struct Base_Range :				Base { string intvFrom, intvTo; } Base_Range;
 		typedef struct Base_Terminal :		Base { string terminal; }					Base_Terminal;
 		typedef struct Base_Parenthesis : Base { list<Alt> alts; }					Base_Parenthesis;
+		
+		typedef string name;
+		typedef string terminal;
 
-		typedef string escapeChar;
+		// The grand unified data structure to hold all values met during compilation:
+		typedef variant< 
+			Lex& ,
+			Pred& ,
+			Iter& ,
+			Seq& ,
+			TopLevelTerm& ,
+			RuleBody& ,
+			Rule& ,
+			Grammar& ,
+			Grammars& ,
+			Params& ,
+			Alt& ,
+			Base_Application& ,
+			Base_Range& ,
+			Base_Terminal& ,
+			Base_Parenthesis& ,
+			name& ,
+			terminal& 
+		> StackItem;
 	}
 };
 

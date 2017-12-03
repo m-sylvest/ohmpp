@@ -194,9 +194,9 @@ namespace Ohm {
 
 		// Base_terminal has been moved below 'struct terminal'
 		
-		struct Base_Paren : seq< one<'('>, Alt, one<')'> > {};
+		struct Base_Paren : SEQ< one<'('>, Alt, one<')'> > {};
 
-		struct Base_Range: seq< oneCharTerminal, string<'.','.'>, oneCharTerminal > {};
+		struct Base_Range: SEQ< oneCharTerminal, string<'.','.'>, oneCharTerminal > {};
 		
 		struct Base_Appl : 
 			seq< 
