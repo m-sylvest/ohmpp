@@ -100,24 +100,24 @@ namespace Ohm {
 
     //  SuperGrammar
     //    = "<:" ident
-    struct SuperGrammar : SEQ< one<'<'>, one<':'>, ident > {};
+    struct SuperGrammar : SEQ< string<'<',':'>, ident > {};
 
     //  Rule
     //    = ident Formals? ruleDescr? "="  RuleBody  -- define
     //    | ident Formals?            ":=" RuleBody  -- override
     //    | ident Formals?            "+=" RuleBody  -- extend
-    struct Rule : SOR< Rule_Define, Rule_Override, Rule_Extend > {};
+		//
+		// rewritten to Rule = ident Formals? ( Rule_Define | Rule_Override | Rule_Extend )
+		//
+		struct Rule : SEQ< ident, opt<Formals>, sor< Rule_Define, Rule_Override, Rule_Extend > > {}; 
 		
-		struct Rule_Define	: seq< ident, opt<Formals>, opt<ruleDescr>,           one<'='>, RuleBody > {};
-		struct Rule_Override: seq< ident, opt<Formals>,                 one<':'>, one<'='>, RuleBody > {};
-		struct Rule_Extend	: seq< ident, opt<Formals>,                 one<'+'>, one<'='>, RuleBody > {};
+		struct Rule_Define	: SEQ<OPT<ruleDescr>, one<'='>, RuleBody > {};
+		struct Rule_Override: SEQ<			string<':','='>,		RuleBody > {};
+		struct Rule_Extend	: SEQ<			string<'+','='>,		RuleBody > {};
 
     //  RuleBody
     //    = "|"? NonEmptyListOf<TopLevelTerm, "|">
-    struct RuleBody : SEQ< 
-			opt< one<'|'> >, 
-			NonEmptyListOf< TopLevelTerm, one<'|'> >
-    > {};
+    struct RuleBody : SEQ< opt< one<'|'> >, NonEmptyListOf< TopLevelTerm, one<'|'> > > {};
 
     //  TopLevelTerm
     //    = Seq caseName  -- inline
@@ -151,19 +151,31 @@ namespace Ohm {
     //    = Iter*
     struct Seq : STAR<Iter> {};
 
-		struct TopLevelTerm_Seq : Seq {}; 
+		struct TopLevelTerm_Seq : seq<Seq> {}; 
 		
     //  Iter
     //    = Pred "*"  -- star
     //    | Pred "+"  -- plus
     //    | Pred "?"  -- opt
     //    | Pred
-    struct Iter : SOR< Iter_Star, Iter_Plus, Iter_Opt, Iter_Pred > {};
-
+		//
+		// -- for the sake of stack-based Pred's rewritten to
+		//
+		//  Iter = Pred ( "*" | "+" | "?" )?
+		//
+    struct Iter : 
+			SEQ	<	Pred, 
+						opt<
+							sor<
+								one<'*'>,one<'+'>,one<'?'> 
+							>
+						>
+					> {};
+#if 0
 		struct Iter_Star : seq< Pred, one<'*'> > {};
 		struct Iter_Plus : seq< Pred, one<'+'> > {};
 		struct Iter_Opt  : seq< Pred, one<'?'> > {};
-    
+#endif    
 
     //  Pred
     //    = "~" Lex  -- not
@@ -174,23 +186,23 @@ namespace Ohm {
 		struct Pred_Not				: seq< one<'~'>, Lex > {};
 		struct Pred_Lookahead	: seq< one<'&'>, Lex > {};
 		
-		struct Iter_Pred : Pred {};
+		struct Iter_Pred : seq<Pred> {};
 
     //  Lex
     //    = "#" Base  -- lex
     //    | Base
-    struct Lex : SOR< Lex_Lex, Lex_Base > {};
+    struct Lex : sor< Lex_Lex, Lex_Base > {};
 		
 		struct Lex_Lex : seq< one<'#'>, Base > {};
 	
-		struct Pred_Lex       : Lex {};
+		struct Pred_Lex       : seq<Lex> {};
 
     //  Base
     //    = ident Params? ~(ruleDescr? "=" | ":=" | "+=")  -- application
     //    | oneCharTerminal ".." oneCharTerminal           -- range
     //    | terminal                                       -- terminal
     //    | "(" Alt ")"                                    -- paren
-    struct Base : SOR< Base_Appl, Base_Range, Base_Terminal, Base_Paren > {};
+    struct Base : SOR< name > {}; //,Base_Appl, Base_Range, Base_Terminal, Base_Paren > {};
 
 		// Base_terminal has been moved below 'struct terminal'
 		
@@ -214,7 +226,7 @@ namespace Ohm {
 				>
 			> {};
 			
-		struct Lex_Base: Base {};
+		struct Lex_Base: seq<Base> {};
 
     //  ruleDescr  (a rule description)
     //    = "(" ruleDescrText ")"

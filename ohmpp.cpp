@@ -11,7 +11,6 @@ int main( int argc, char *argv[] )
 {
   for( int i = 1; i < argc; ++i ) 
   {
-
     pegtl::argv_input<> in( argv, 1 );
     std::vector<Ohm::AST::StackItem> v;
 #if 0
@@ -21,12 +20,24 @@ int main( int argc, char *argv[] )
     pegtl::parse< pegtl::must< Ohm::STAR<Ohm::punctuation> >, Ohm::action, Ohm::control >( in, v );
     pegtl::parse< pegtl::must< Ohm::NonEmptyListOf<Ohm::STAR<Ohm::punctuation>, pegtl::one<','>> >, action, control >( in, v );
     pegtl::parse< pegtl::must< Ohm::Grammars >, action, control >( in, v );
-#endif
     pegtl::parse< 
       pegtl::must< 
         pegtl::star< 
           pegtl::seq<
             pegtl::sor<Ohm::GRM::caseName,Ohm::GRM::comment,Ohm::GRM::name,Ohm::GRM::escapeChar,Ohm::GRM::operator_,Ohm::GRM::terminal>,
+            pegtl::one<','>
+          >
+        >
+      >, 
+      Ohm::action, 
+      Ohm::control 
+    >( in, v );
+#endif
+    pegtl::parse< 
+      pegtl::must< 
+        pegtl::star< 
+          pegtl::seq<
+            pegtl::sor<Ohm::GRM::Seq>,
             pegtl::one<','>
           >
         >
