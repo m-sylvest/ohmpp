@@ -122,10 +122,11 @@ namespace Ohm {
     //  TopLevelTerm
     //    = Seq caseName  -- inline
     //    | Seq
-		
-    struct TopLevelTerm : SOR< TopLevelTerm_CaseName, TopLevelTerm_Seq > {};
-		
-		struct TopLevelTerm_CaseName : seq< Seq, caseName > {}; 
+		//
+		// rewritten to 
+		//   TopLevelTerm = Seq caseName?  
+		//
+		struct TopLevelTerm : SEQ< Seq, opt<caseName> > {}; 
 
     //  Formals
     //    = "<" ListOf<ident, ","> ">"
@@ -150,8 +151,6 @@ namespace Ohm {
     //  Seq
     //    = Iter*
     struct Seq : STAR<Iter> {};
-
-		struct TopLevelTerm_Seq : seq<Seq> {}; 
 		
     //  Iter
     //    = Pred "*"  -- star
@@ -202,7 +201,7 @@ namespace Ohm {
     //    | oneCharTerminal ".." oneCharTerminal           -- range
     //    | terminal                                       -- terminal
     //    | "(" Alt ")"                                    -- paren
-    struct Base : SOR< name > {}; //,Base_Appl, Base_Range, Base_Terminal, Base_Paren > {};
+    struct Base : SOR< Base_Appl, Base_Range, Base_Terminal, Base_Paren > {};
 
 		// Base_terminal has been moved below 'struct terminal'
 		
@@ -278,13 +277,13 @@ namespace Ohm {
 
     //  ident  (an identifier)
     //    = name
-    struct ident : name {};
+    struct ident : seq<name> {};
 
     //  terminal
     //    = "\"" terminalChar* "\""
     struct terminal : seq< one<'"'>, star<terminalChar>, one<'"'> > {};
 
-		struct Base_Terminal: terminal {};
+		struct Base_Terminal: seq<terminal> {};
 
     //  oneCharTerminal
     //    = "\"" terminalChar "\""

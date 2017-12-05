@@ -14,7 +14,7 @@ namespace Ohm
 	{
 		using namespace std;
         
-		typedef struct { string name; } Base;
+		typedef struct Base;
 
 		typedef struct { bool hashPrefix; Base* base; } Lex;
 		typedef struct { string op; Lex* lex; } Pred;
@@ -27,15 +27,17 @@ namespace Ohm
 		typedef struct { string name, parent; list<Rule *> rules; } Grammar;
 		typedef list<Grammar *> Grammars;
 
-		typedef list<Seq *> Params;
-		typedef list<Seq *> Alt;
-		typedef struct Base_Application : Base { string name; list<Params *> params; } Base_Application;
-		typedef struct Base_Range :				Base { string intvFrom, intvTo; } Base_Range;
-		typedef struct Base_Terminal :		Base { string terminal; }					Base_Terminal;
-		typedef struct Base_Parenthesis : Base { list<Alt *> alts; }				Base_Parenthesis;
-		
-		typedef string name;
-		typedef string terminal;
+		typedef list<Seq *> ParamsAlt;
+		typedef struct Base { 
+			enum class Type { Appl, Range, Term, Alt } type;
+			string name; 
+			ParamsAlt *paramsAlts; 
+			string intvFrom, intvTo; 
+		} Base;
+
+		typedef struct { string s; } name;
+		typedef struct { string s; } terminal;
+		typedef struct { string s; } caseName;
 
 		// The grand unified data structure to hold all values met during compilation:
 		typedef variant< 
@@ -49,13 +51,10 @@ namespace Ohm
 			Rule *,
 			Grammar *,
 			Grammars *,
-			Params *,
-			Alt *,
-			Base_Application *,
-			Base_Range *,
-			Base_Terminal *,
-			Base_Parenthesis *,
-			string *
+			ParamsAlt *,
+			name *,
+			terminal *,
+			caseName *
 		> StackItem;
 	}
 };
@@ -67,9 +66,19 @@ namespace Ohm {
 	template< typename T >
 	static T *pop(std::vector<AST::StackItem> &v)
 	{
-		auto e = std::get<T *>(v.back());
-		v.pop_back();
-		return e;
+		if( !v.empty() && std::holds_alternative<T *>(v.back()) )
+		{
+//		std::cerr << "Enter pop(), size=" << v.size() << ", index=" << v.back().index() << std::endl;
+			auto e = std::get<T *>(v.back());
+			v.pop_back();
+//		std::cerr << "Exit pop() A, size=" << v.size() << std::endl;
+			return e;
+		}
+		else
+		{
+//			std::cerr << "Exit pop() Z, size=" << v.size() << std::endl;
+			return nullptr;
+		}
 	}
 	
 	template< typename T >
@@ -78,14 +87,9 @@ namespace Ohm {
 		std::cerr << "Enter pop_any, size=" << v.size() << ", index=" << v.back().index() << std::endl;
 		std::list<T *> result;
 
-		if( !v.empty() )
+		for( auto top = pop<T>(v); top ; top = pop<T>(v) )
 		{
-			for( auto top = v.back() ; !v.empty() && std::holds_alternative<T *>(top) ;  )
-			{
-				result.push_back( pop<T>(v) );				
-				if( !v.empty() ) 
-					top = v.back();
-			}
+				result.push_back( top );							
 		}
 		std::cerr << "Exit pop_any, size=" << v.size() << ", result-size=" << result.size() << std::endl;
 		std::cerr.flush();
@@ -96,23 +100,25 @@ namespace Ohm {
 	struct action : pegtl::nothing< Rule > 
 	{
 	};
-
+	
+#if 1
 	//  Base
 	//    = ident Params? ~(ruleDescr? "=" | ":=" | "+=")  -- application
 	//    | oneCharTerminal ".." oneCharTerminal           -- range
 	//    | terminal                                       -- terminal
 	//    | "(" Alt ")"                                    -- paren
 	template<> 
-	struct action< GRM::Base >
+	struct action< GRM::Base_Appl >
 	{
 		template< typename Input >
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
-			std::cout << "Base: "<< in.string() << std::endl;
-			v.push_back( new AST::Base{ *pop<std::string>(v) } );
+			std::cout << "Base_Appl: "<< in.string() << std::endl;
+			auto ps = pop<AST::ParamsAlt>(v);
+			v.push_back( new AST::Base{ AST::Base::Type::Appl, pop<AST::name>(v)->s, ps, "", "" } );
 		}
 	};
-
+#endif
 	
 	//  Lex
 	//    = "#" Base  -- lex
@@ -274,7 +280,7 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cout << "name: "<< in.string() << std::endl;
-			v.push_back( new std::string( in.string() ) );
+			v.push_back( new AST::name{ in.string() } );
 		}
 	};
 
@@ -288,7 +294,7 @@ namespace Ohm {
 			int sz = in.string().size();
 			std::string s = in.string().substr(1,sz-2);
 			std::cout << "terminal: "<< s << std::endl;
-			v.push_back( new std::string( s ) );
+			v.push_back( new AST::terminal{ s } );
 		}
 	};
 
@@ -299,7 +305,8 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cout << "caseName: "<< in.string() << std::endl;
-			// silently pass input 'name' as 'caseName' as StackItem
+			auto n = pop<AST::name>(v);
+			v.push_back( new AST::terminal{ n->s } );
 		}
 	};
 

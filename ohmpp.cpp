@@ -37,7 +37,7 @@ int main( int argc, char *argv[] )
       pegtl::must< 
         pegtl::star< 
           pegtl::seq<
-            pegtl::sor<Ohm::GRM::Seq>,
+            pegtl::sor<Ohm::GRM::TopLevelTerm>,
             pegtl::one<','>
           >
         >
