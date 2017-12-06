@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <variant>
+#include <functional>
 
 namespace Ohm 
 {
@@ -16,10 +17,11 @@ namespace Ohm
         
 		typedef struct Base;
 
-		typedef struct { bool hashPrefix; Base* base; } Lex;
+		typedef struct { typedef GRM::Lex GRM; bool hashPrefix; Base* base; } Lex;
 		typedef struct { string op; Lex* lex; } Pred;
 		typedef struct { Pred* pred; string op; } Iter;
-		typedef list<Iter *> Seq;
+		typedef struct { typedef GRM::Seq GRM; list<Iter *> l; } Seq;
+		 
 		typedef struct { Seq seq; string caseName; } TopLevelTerm;
 		typedef list<TopLevelTerm *> RuleBody;
 		typedef struct { string name, rulesDescr, op; list<RuleBody *> ruleBodys; } Rule;
@@ -68,15 +70,15 @@ namespace Ohm {
 	{
 		if( !v.empty() && std::holds_alternative<T *>(v.back()) )
 		{
-//		std::cerr << "Enter pop(), size=" << v.size() << ", index=" << v.back().index() << std::endl;
+			std::cerr << "Enter pop(), size=" << v.size() << ", index=" << v.back().index() << std::endl;
 			auto e = std::get<T *>(v.back());
 			v.pop_back();
-//		std::cerr << "Exit pop() A, size=" << v.size() << std::endl;
+			std::cerr << "Exit pop() A, size=" << v.size() << std::endl;
 			return e;
 		}
 		else
 		{
-//			std::cerr << "Exit pop() Z, size=" << v.size() << std::endl;
+			std::cerr << "Exit pop() Z, size=" << v.size() << std::endl;
 			return nullptr;
 		}
 	}
@@ -209,57 +211,6 @@ namespace Ohm {
 			v.push_back( new AST::Iter{ pop<AST::Pred>(v), op } );
 		}
 	};
-#if 0
-	template<> 
-	struct action< GRM::Iter_Star >
-	{
-		template< typename Input >
-		static void apply( const Input& in, std::vector<AST::StackItem> &v )
-		{
-			std::cout << "Iter_Star: "<< in.string() << std::endl;
-			v.push_back( new AST::Iter{ pop<AST::Pred>(v), "*" } );
-		}
-	};
-
-	template<> 
-	struct action< GRM::Iter_Plus >
-	{
-		template< typename Input >
-		static void apply( const Input& in, std::vector<AST::StackItem> &v )
-		{
-			std::cout << "Iter_Plus: "<< in.string() << std::endl;
-			auto *pred = std::get<AST::Pred *>(v.back());
-			v.pop_back();
-			v.push_back( new AST::Iter{ pred, "+" } );
-		}
-	};
-
-	template<> 
-	struct action< GRM::Iter_Opt >
-	{
-		template< typename Input >
-		static void apply( const Input& in, std::vector<AST::StackItem> &v )
-		{
-			std::cout << "Iter_Opt: "<< in.string() << std::endl;
-			auto *pred = std::get<AST::Pred *>(v.back());
-			v.pop_back();
-			v.push_back( new AST::Iter{ pred, "?" } );
-		}
-	};
-
-	template<> 
-	struct action< GRM::Iter_Pred >
-	{
-		template< typename Input >
-		static void apply( const Input& in, std::vector<AST::StackItem> &v )
-		{
-			std::cout << "Iter_: "<< in.string() << std::endl;
-			auto *pred = std::get<AST::Pred *>(v.back());
-			v.pop_back();
-			v.push_back( new AST::Iter{ pred, "" } );
-		}
-	};
-#endif
 
 	template<> 
 	struct action< GRM::Seq >
@@ -268,6 +219,19 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cout << "Seq: "<< in.string() << std::endl;
+			
+			auto its = pop_any<AST::Iter>(v);
+//			v.back() = its;
+		}
+	};
+	
+	template<> 
+	struct action< GRM::TopLevelTerm >
+	{
+		template< typename Input >
+		static void apply( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cout << "TopLevelTerm: "<< in.string() << std::endl;
 			
 			v.push_back( new AST::Seq{ pop_any<AST::Iter>(v) } );
 		}
@@ -350,4 +314,29 @@ namespace Ohm {
 	{
 	};
 
+	template<>
+	struct control< GRM::Seq > : pegtl::normal< GRM::Seq >
+	{
+		template< typename Input >
+		static void start( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cout << "*** Seq, entering, sz=" << v.size() << std::endl;
+
+			v.push_back( static_cast<AST::Seq *>(nullptr) );
+		}
+		
+		template< typename Input >
+		static void failure( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			if( !v.empty() )
+				std::cout << "*** Seq, exiting: sz=" << v.size() << ", index=" << v.back().index() << std::endl;
+			
+			if( auto e = pop<AST::Seq>(v) ; e )
+			{
+				delete e;
+			}
+		}
+	};
+
 }
+
