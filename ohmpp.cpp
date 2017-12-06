@@ -37,7 +37,7 @@ int main( int argc, char *argv[] )
       pegtl::must< 
         pegtl::star< 
           pegtl::seq<
-            pegtl::sor<Ohm::GRM::Seq>,
+            pegtl::sor<Ohm::GRM::TopLevelTerm>,
             pegtl::one<','>
           >
         >
@@ -45,6 +45,7 @@ int main( int argc, char *argv[] )
       Ohm::action, 
       Ohm::control 
     >( in, v );
+    Ohm::dumpStack(v);
 #if 0
     for( const auto& line : data ) {
        assert( !line.empty() );  // The grammar doesn't allow empty lines.
