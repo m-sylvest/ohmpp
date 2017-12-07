@@ -33,11 +33,26 @@ int main( int argc, char *argv[] )
       Ohm::control 
     >( in, v );
 #endif
+#if 0
     pegtl::parse< 
       pegtl::must< 
         pegtl::star< 
           pegtl::seq<
-            pegtl::sor<Ohm::GRM::TopLevelTerm>,
+            pegtl::sor<Ohm::GRM::Rule>,
+            pegtl::one<','>
+          >
+        >
+      >, 
+      Ohm::action, 
+      Ohm::control 
+    >( in, v );
+    Ohm::dumpStack(v);
+#endif
+    pegtl::parse< 
+      pegtl::must< 
+        pegtl::star< 
+          pegtl::seq<
+            pegtl::sor<Ohm::GRM::Rule>,
             pegtl::one<','>
           >
         >

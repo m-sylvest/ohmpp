@@ -107,13 +107,19 @@ namespace Ohm {
     //    | ident Formals?            ":=" RuleBody  -- override
     //    | ident Formals?            "+=" RuleBody  -- extend
 		//
-		// rewritten to Rule = ident Formals? ( Rule_Define | Rule_Override | Rule_Extend )
+		// rewritten to Rule = ident Formals? ( RuleDescr? "=" | ":" | "+" ) ruleBody
 		//
-		struct Rule : SEQ< ident, opt<Formals>, sor< Rule_Define, Rule_Override, Rule_Extend > > {}; 
-		
-		struct Rule_Define	: SEQ<OPT<ruleDescr>, one<'='>, RuleBody > {};
-		struct Rule_Override: SEQ<			string<':','='>,		RuleBody > {};
-		struct Rule_Extend	: SEQ<			string<'+','='>,		RuleBody > {};
+		struct Rule : 
+			SEQ< 
+				ident, 
+				opt<Formals>, 
+				sor< 
+					SEQ< OPT<ruleDescr>, one<'='> >, 
+					SEQ<			string<':','='>			>,
+					SEQ<			string<'+','='>			>
+				>,
+				RuleBody
+			> {}; 
 
     //  RuleBody
     //    = "|"? NonEmptyListOf<TopLevelTerm, "|">
@@ -248,7 +254,7 @@ namespace Ohm {
 //			star< 
 //				seq< alpha > 
 //			>,
-			name,
+			name,			// TODO
 			star< 
 				seq< 
 					not_at< one<'\n'> >, 
@@ -315,7 +321,7 @@ namespace Ohm {
         string<'\\', 'n' >,
         string<'\\', 'r' >,
         string<'\\', 't' >,
-//      seq< one<'\\'>, one<'u'>, xdigit, xdigit, xdigit, xdigit >,
+//      seq< one<'\\'>, one<'u'>, xdigit, xdigit, xdigit, xdigit >,	// TODO
         seq< one<'\\'>, one<'x'>, xdigit, xdigit >
     > {};
 

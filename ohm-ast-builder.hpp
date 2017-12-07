@@ -17,14 +17,18 @@ namespace Ohm
         
 		typedef struct Base;
 
-		typedef struct { typedef GRM::Lex GRM; bool hashPrefix; Base* base; } Lex;
+		typedef struct { bool hashPrefix; Base* base; } Lex;
 		typedef struct { string op; Lex* lex; } Pred;
 		typedef struct { Pred* pred; string op; } Iter;
 		typedef list<Iter *> Seq;
 		 
 		typedef struct { Seq *seq; string caseName; } TopLevelTerm;
 		typedef list<TopLevelTerm *> RuleBody;
-		typedef struct { string name, rulesDescr, op; list<RuleBody *> ruleBodys; } Rule;
+		typedef struct { 
+			enum class Type { Define, Override, Extend  } type;
+			string name, *rulesDescr;
+			RuleBody *ruleBody; 
+		} Rule;
 
 		typedef struct { string name, parent; list<Rule *> rules; } Grammar;
 		typedef list<Grammar *> Grammars;
@@ -102,7 +106,7 @@ namespace Ohm {
 
 		for( auto top = pop<T>(v); top ; top = pop<T>(v) )
 		{
-				result->push_back( top );							
+				result->push_front( top );							
 		}
 		std::cerr << "Exit pop_any, size=" << v.size() << ", result-size=" << result->size() << std::endl;
 		std::cerr.flush();
@@ -237,6 +241,37 @@ namespace Ohm {
 		}
 	};
 	
+	//  Rule
+	//    = ident Formals? ruleDescr? "="  RuleBody  -- define
+	//    | ident Formals?            ":=" RuleBody  -- override
+	//    | ident Formals?            "+=" RuleBody  -- extend
+	//
+	// rewritten to Rule = ident Formals? ( RuleDescr? "=" | ":" | "+" ) ruleBody
+	//
+	template<> 
+	struct action< GRM::Rule >
+	{
+		template< typename Input >
+		static void apply( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			auto s = in.string();
+			int posEq = s.find('=');
+			char op1 = s[posEq-1];
+			std::cerr << "Rule: " << s << ", op1=" << op1 << std::endl;
+
+			AST::Rule::Type t = 
+							op1=='+' ? AST::Rule::Type::Extend :
+							op1==':' ? AST::Rule::Type::Override :
+							AST::Rule::Type::Define;
+
+			auto ruleBody = pop<AST::RuleBody>(v);
+//			auto ruleDescr= pop<std::string>(v);	// TODO
+//			auto formals	= pop<AST::Formals>(v);	// TODO
+			auto id				= pop<AST::name>(v);
+			v.push_back( new AST::Rule{ t, id->s, nullptr, ruleBody } );
+		}
+	};
+
 	template<> 
 	struct action< GRM::name >
 	{
@@ -347,5 +382,38 @@ namespace Ohm {
 			std::cerr << "Seq: sz=" << v.size() << ", index=" << v.back().index() << std::endl;
 		}
 	};
-}
 
+	template<>
+	struct control< GRM::RuleBody > : pegtl::normal< GRM::RuleBody >
+	{
+		template< typename Input >
+		static void start( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cerr << "*** RuleBody, start, sz=" << v.size() << std::endl;
+
+			v.push_back( static_cast<AST::RuleBody *>(nullptr) );
+		}
+		
+		template< typename Input >
+		static void failure( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			if( !v.empty() )
+				std::cerr << "*** RuleBody, failure: sz=" << v.size() << ", index=" << v.back().index() << std::endl;
+			
+			if( auto e = pop<AST::RuleBody>(v) ; e )
+			{
+				delete e;
+			}
+		}
+
+		template< typename Input >
+		static void success( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cerr << "*** RuleBody, success, sz=" << v.size() << std::endl;
+			dumpStack(v);
+			
+			v.back() = pop_any<AST::TopLevelTerm>(v);
+			std::cerr << "RuleBody: sz=" << v.size() << ", index=" << v.back().index() << std::endl;
+		}
+	};
+}
