@@ -96,11 +96,11 @@ namespace Ohm {
 
     //  Grammar
     //    = ident SuperGrammar? "{" Rule* "}"
-    struct Grammar  : SEQ< ident, opt<SuperGrammar>, one<'{'>, star<Rule>, one<'}'> > {};
+    struct Grammar  : SEQ< ident, OPT<SuperGrammar>, one<'{'>, STAR<Rule>, one<'}'> > {};
 
     //  SuperGrammar
     //    = "<:" ident
-    struct SuperGrammar : SEQ< string<'<',':'>, ident > {};
+    struct SuperGrammar : SEQ< string<'<',':'>, star<blank>, ident > {};
 
     //  Rule
     //    = ident Formals? ruleDescr? "="  RuleBody  -- define

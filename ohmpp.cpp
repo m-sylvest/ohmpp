@@ -52,7 +52,7 @@ int main( int argc, char *argv[] )
       pegtl::must< 
         pegtl::star< 
           pegtl::seq<
-            pegtl::sor<Ohm::GRM::Rule>,
+            pegtl::sor<Ohm::GRM::Grammars>,
             pegtl::one<','>
           >
         >

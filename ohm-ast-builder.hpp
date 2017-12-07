@@ -30,7 +30,7 @@ namespace Ohm
 			RuleBody *ruleBody; 
 		} Rule;
 
-		typedef struct { string name, parent; list<Rule *> rules; } Grammar;
+		typedef struct { string name, parent; list<Rule *> *rules; } Grammar;
 		typedef list<Grammar *> Grammars;
 
 		typedef list<Seq *> ParamsAlt;
@@ -44,6 +44,8 @@ namespace Ohm
 		typedef struct { string s; } name;
 		typedef struct { string s; } terminal;
 		typedef struct { string s; } caseName;
+		typedef struct { string s; } SuperGrammar;
+		typedef struct { string s; } RuleDescr;
 
 		// The grand unified data structure to hold all values met during compilation:
 		typedef variant< 
@@ -54,13 +56,15 @@ namespace Ohm
 			Seq *,
 			TopLevelTerm *,
 			RuleBody *,
+			RuleDescr *,
 			Rule *,
 			Grammar *,
 			Grammars *,
 			ParamsAlt *,
 			name *,
 			terminal *,
-			caseName *
+			caseName *,
+			SuperGrammar *
 		> StackItem;
 	}
 };
@@ -273,6 +277,33 @@ namespace Ohm {
 	};
 
 	template<> 
+	struct action< GRM::SuperGrammar >
+	{
+		template< typename Input >
+		static void apply( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cerr << "SuperGrammar: "<< in.string() << std::endl;
+			
+			v.push_back( new AST::SuperGrammar{ pop<AST::name>(v)->s } );
+		}
+	};
+	
+	template<> 
+	struct action< GRM::Grammar >
+	{
+		template< typename Input >
+		static void apply( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cerr << "Grammar: "<< in.string() << std::endl;
+			
+			auto rules = pop_any<AST::Rule>(v);
+			auto super = pop<AST::SuperGrammar>(v);
+			auto sgname = super ? super->s : std::string("");
+			v.push_back( new AST::Grammar{ pop<AST::name>(v)->s, sgname, rules } );
+		}
+	};
+	
+	template<> 
 	struct action< GRM::name >
 	{
 		template< typename Input >
@@ -416,4 +447,39 @@ namespace Ohm {
 			std::cerr << "RuleBody: sz=" << v.size() << ", index=" << v.back().index() << std::endl;
 		}
 	};
+	
+	template<>
+	struct control< GRM::Grammars > : pegtl::normal< GRM::Grammars >
+	{
+		template< typename Input >
+		static void start( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cerr << "*** Grammars, start, sz=" << v.size() << std::endl;
+
+			v.push_back( static_cast<AST::Grammars *>(nullptr) );
+		}
+		
+		template< typename Input >
+		static void failure( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			if( !v.empty() )
+				std::cerr << "*** Grammars, failure: sz=" << v.size() << ", index=" << v.back().index() << std::endl;
+			
+			if( auto e = pop<AST::Grammars>(v) ; e )
+			{
+				delete e;
+			}
+		}
+
+		template< typename Input >
+		static void success( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cerr << "*** Grammars, success, sz=" << v.size() << std::endl;
+			dumpStack(v);
+			
+			v.back() = pop_any<AST::Grammar>(v);
+			std::cerr << "Grammars: sz=" << v.size() << ", index=" << v.back().index() << std::endl;
+		}
+	};
+	
 }
