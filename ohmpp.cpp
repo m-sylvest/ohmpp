@@ -50,12 +50,7 @@ int main( int argc, char *argv[] )
 #endif
     pegtl::parse< 
       pegtl::must< 
-        pegtl::star< 
-          pegtl::seq<
-            pegtl::sor<Ohm::GRM::Grammars>,
-            pegtl::one<','>
-          >
-        >
+          Ohm::GRM::Grammars
       >, 
       Ohm::action, 
       Ohm::control 

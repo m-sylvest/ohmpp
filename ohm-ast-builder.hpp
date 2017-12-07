@@ -24,21 +24,22 @@ namespace Ohm
 		 
 		typedef struct { Seq *seq; string caseName; } TopLevelTerm;
 		typedef list<TopLevelTerm *> RuleBody;
+		typedef list<Seq *> ParamsAlt;
 		typedef struct { 
 			enum class Type { Define, Override, Extend  } type;
-			string name, *rulesDescr;
-			RuleBody *ruleBody; 
+			string name, rulesDescr;
+			RuleBody *ruleBody;
+			ParamsAlt *ruleParms;
 		} Rule;
 
 		typedef struct { string name, parent; list<Rule *> *rules; } Grammar;
 		typedef list<Grammar *> Grammars;
 
-		typedef list<Seq *> ParamsAlt;
 		typedef struct Base { 
 			enum class Type { Appl, Range, Term, Alt } type;
 			string name; 
 			ParamsAlt *paramsAlts; 
-			string intvFrom, intvTo; 
+			string rangeFrom, rangeTo; 
 		} Base;
 
 		typedef struct { string s; } name;
@@ -122,7 +123,6 @@ namespace Ohm {
 	{
 	};
 	
-#if 1
 	//  Base
 	//    = ident Params? ~(ruleDescr? "=" | ":=" | "+=")  -- application
 	//    | oneCharTerminal ".." oneCharTerminal           -- range
@@ -139,7 +139,41 @@ namespace Ohm {
 			v.push_back( new AST::Base{ AST::Base::Type::Appl, pop<AST::name>(v)->s, ps, "", "" } );
 		}
 	};
-#endif
+	
+	template<> 
+	struct action< GRM::Base_Terminal >
+	{
+		template< typename Input >
+		static void apply( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cerr << "Base_Terminal: "<< in.string() << std::endl;
+			v.push_back( new AST::Base{ AST::Base::Type::Term, pop<AST::name>(v)->s } );
+		}
+	};
+	
+	template<> 
+	struct action< GRM::Base_Paren >
+	{
+		template< typename Input >
+		static void apply( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cerr << "Base_Paren: "<< in.string() << std::endl;
+			v.push_back( new AST::Base{ AST::Base::Type::Alt, "", pop<AST::ParamsAlt>(v) } );
+		}
+	};
+	
+	template<> 
+	struct action< GRM::Base_Range >
+	{
+		template< typename Input >
+		static void apply( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			auto s = in.string();
+			const char *from = &s[0], *to = &s[s.size()-1];
+			std::cerr << "Base_Range: " << s << " = " << from << ".." << to << std::endl;
+			v.push_back( new AST::Base{ AST::Base::Type::Range, "", nullptr, from, to } );
+		}
+	};
 	
 	//  Lex
 	//    = "#" Base  -- lex
@@ -269,10 +303,11 @@ namespace Ohm {
 							AST::Rule::Type::Define;
 
 			auto ruleBody = pop<AST::RuleBody>(v);
-//			auto ruleDescr= pop<std::string>(v);	// TODO
-//			auto formals	= pop<AST::Formals>(v);	// TODO
+			auto ruleDescr= pop<AST::RuleDescr>(v);
+			auto rdtxt		= ruleDescr ? ruleDescr->s : "";
+			auto ruleParms= pop<AST::ParamsAlt>(v);
 			auto id				= pop<AST::name>(v);
-			v.push_back( new AST::Rule{ t, id->s, nullptr, ruleBody } );
+			v.push_back( new AST::Rule{ t, id->s, rdtxt, ruleBody, ruleParms } );
 		}
 	};
 
@@ -285,6 +320,17 @@ namespace Ohm {
 			std::cerr << "SuperGrammar: "<< in.string() << std::endl;
 			
 			v.push_back( new AST::SuperGrammar{ pop<AST::name>(v)->s } );
+		}
+	};
+	
+	template<> 
+	struct action< GRM::ruleDescrText >
+	{
+		template< typename Input >
+		static void apply( const Input& in, std::vector<AST::StackItem> &v )
+		{			
+			std::cerr << "RuleDescr: "<< in.string() << std::endl;			
+			v.push_back( new AST::RuleDescr{ in.string() } );
 		}
 	};
 	
@@ -339,7 +385,7 @@ namespace Ohm {
 			v.push_back( new AST::caseName{ n->s } );
 		}
 	};
-
+#if 0
 	template<> 
 	struct action< GRM::comment >
 	{
@@ -374,7 +420,7 @@ namespace Ohm {
 			std::cerr << std::endl;
 		}
 	};
-
+#endif
 	template< typename Rule >
 	struct control : pegtl::normal< Rule >
 	{

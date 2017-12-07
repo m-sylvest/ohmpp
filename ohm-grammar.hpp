@@ -235,7 +235,7 @@ namespace Ohm {
 
     //  ruleDescr  (a rule description)
     //    = "(" ruleDescrText ")"
-    struct ruleDescr : seq< one<'('>, ruleDescrText, one<')'> >{};
+    struct ruleDescr : SEQ< one<'('>, ruleDescrText, one<')'> >{};
 
     //  ruleDescrText
     //    = (~")" any)*
@@ -254,7 +254,7 @@ namespace Ohm {
 //			star< 
 //				seq< alpha > 
 //			>,
-			name,			// TODO
+			name,
 			star< 
 				seq< 
 					not_at< one<'\n'> >, 
