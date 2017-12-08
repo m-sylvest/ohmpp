@@ -251,10 +251,9 @@ namespace Ohm {
 					space_
 				> 
 			>,
-//			star< 
-//				seq< alpha > 
-//			>,
-			name,
+			star< 
+				seq< alpha > 
+			>,
 			star< 
 				seq< 
 					not_at< one<'\n'> >, 

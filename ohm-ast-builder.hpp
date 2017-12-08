@@ -8,6 +8,22 @@
 #include <variant>
 #include <functional>
 
+//
+// From https://stackoverflow.com/questions/1798112/removing-leading-and-trailing-spaces-from-a-string
+//
+std::string trim(const std::string& str,
+                 const std::string& whitespace = " \t")
+{
+    const auto strBegin = str.find_first_not_of(whitespace);
+    if (strBegin == std::string::npos)
+        return ""; // no content
+
+    const auto strEnd = str.find_last_not_of(whitespace);
+    const auto strRange = strEnd - strBegin + 1;
+
+    return str.substr(strBegin, strRange);
+}
+
 namespace Ohm 
 {
 	// Data structures for building the Abstract Syntax Tree of an Ohm grammar;
@@ -380,9 +396,10 @@ namespace Ohm {
 		template< typename Input >
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
-			std::cerr << "caseName: "<< in.string() << std::endl;
-			auto n = pop<AST::name>(v);
-			v.push_back( new AST::caseName{ n->s } );
+			// strip surrounding stuff from caseName:
+			auto t = trim( in.string(), "- \t\n" );
+			std::cerr << "caseName: "<< t << std::endl;
+			v.push_back( new AST::caseName{ t } );
 		}
 	};
 #if 0
