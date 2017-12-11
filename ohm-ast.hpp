@@ -69,19 +69,19 @@ namespace Ohm
 			Pred *,
 			Iter *,
 			Seq *,
+			ParamsAlt *,
 			TopLevelTerm *,
 			RuleBody *,
 			RuleDescr *,
 			Rule *,
 			Grammar *,
-			Grammars *,
-			ParamsAlt *
+			Grammars *
 		> StackItem;
 		
 		// make sure that ordering + elements here strictly follows above variant:
 		const string typenames[] = {
 			"name", "terminal", "caseName", "SuperGrammar",
-			"Base", "Lex", "Pred", "Iter", "Seq", "TopLevelTerm", "RuleBody", "RuleDescr", "Rule", "Grammar", "Grammars", "ParmsAlt"
+			"Base", "Lex", "Pred", "Iter", "Seq", "ParmsAlt", "TopLevelTerm", "RuleBody", "RuleDescr", "Rule", "Grammar", "Grammars"
 		};
 		
 		template< typename T >
