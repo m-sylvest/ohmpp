@@ -1,15 +1,17 @@
 #include "ohm-grammar.hpp"
+#include "ohm-ast.hpp"
 
-#include <string>
-#include <list>
 #include <vector>
 #include <iostream>
 #include <iomanip>
-#include <variant>
-#include <functional>
+//#include <functional>
 
 //
 // From https://stackoverflow.com/questions/1798112/removing-leading-and-trailing-spaces-from-a-string
+//
+// Non-copying alternative:
+// s.erase(0, s.find_first_not_of(" \n\r\t"));                                                                                               
+// s.erase(s.find_last_not_of(" \n\r\t")+1); 
 //
 std::string trim(const std::string& str,
                  const std::string& whitespace = " \t")
@@ -23,68 +25,6 @@ std::string trim(const std::string& str,
 
     return str.substr(strBegin, strRange);
 }
-
-namespace Ohm 
-{
-	// Data structures for building the Abstract Syntax Tree of an Ohm grammar;
-	namespace AST 
-	{
-		using namespace std;
-        
-		typedef struct Base;
-
-		typedef struct { bool hashPrefix; Base* base; } Lex;
-		typedef struct { string op; Lex* lex; } Pred;
-		typedef struct { Pred* pred; string op; } Iter;
-		typedef list<Iter *> Seq;
-		 
-		typedef struct { Seq *seq; string caseName; } TopLevelTerm;
-		typedef list<TopLevelTerm *> RuleBody;
-		typedef list<Seq *> ParamsAlt;
-		typedef struct { 
-			enum class Type { Define, Override, Extend  } type;
-			string name, rulesDescr;
-			RuleBody *ruleBody;
-			ParamsAlt *ruleParms;
-		} Rule;
-
-		typedef struct { string name, parent; list<Rule *> *rules; } Grammar;
-		typedef list<Grammar *> Grammars;
-
-		typedef struct Base { 
-			enum class Type { Appl, Range, Term, Alt } type;
-			string name; 
-			ParamsAlt *paramsAlts; 
-			string rangeFrom, rangeTo; 
-		} Base;
-
-		typedef struct { string s; } name;
-		typedef struct { string s; } terminal;
-		typedef struct { string s; } caseName;
-		typedef struct { string s; } SuperGrammar;
-		typedef struct { string s; } RuleDescr;
-
-		// The grand unified data structure to hold all values met during compilation:
-		typedef variant< 
-			Base *,
-			Lex *,
-			Pred *,
-			Iter *,
-			Seq *,
-			TopLevelTerm *,
-			RuleBody *,
-			RuleDescr *,
-			Rule *,
-			Grammar *,
-			Grammars *,
-			ParamsAlt *,
-			name *,
-			terminal *,
-			caseName *,
-			SuperGrammar *
-		> StackItem;
-	}
-};
 
 namespace Ohm {
 
@@ -403,39 +343,42 @@ namespace Ohm {
 		}
 	};
 #if 0
-	template<> 
-	struct action< GRM::comment >
+	template< typename Rule, typename Ast >
+	struct control_rule_ast : pegtl::normal< Rule >
 	{
 		template< typename Input >
-		static void apply( const Input& in, std::vector<AST::StackItem> &v )
+		static void def_start( const Input& in, std::vector<AST::StackItem> &v )
 		{
-			std::cerr << "comment: " << in.string() << std::endl;
-		}
-	};
+			AST::StackItem asi = static_cast<Ast *>(nullptr);
+			std::cerr << "*** start(" << AST::typenames[asi.index()] << ")" << std::endl;
 
-	template<> 
-	struct action< GRM::operator_ >
-	{
-		template< typename Input >
-		static void apply( const Input& in, std::vector<AST::StackItem> &v )
-		{
-			std::cerr << in.string() << std::endl;
+			v.push_back( asi );
 		}
-	};
-
-	template<> 
-	struct action< GRM::escapeChar >
-	{
 		template< typename Input >
-		static void apply( const Input& in, std::vector<AST::StackItem> &v )
+		static std::function< void( const Input& in, std::vector<AST::StackItem> &v ) > start = def_start<Input>;
+
+		template< typename Input >
+		static void def_success( const Input& in, std::vector<AST::StackItem> &v )
 		{
+			AST::StackItem asi = static_cast<Ast *>(nullptr);
 			auto s = in.string();
-			std::cerr << "escapeChar(" << s.size() << ")" << std::endl;
-			for (auto i = 0; i < s.length(); ++i)
-				std::cerr << std::setw(2) << std::setfill('0') << std::hex << (int)s[i];
-
-			std::cerr << std::endl;
+			
+			std::cerr << "*** def_success(" << AST::typenames[asi.index()] << "): " << s << std::endl;
 		}
+		template< typename Input >
+		static std::function< void( const Input& in, std::vector<AST::StackItem> &v ) > start = def_success<Input>;
+
+		template< typename Input >
+		static void def_failure( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			AST::StackItem asi = static_cast<Ast *>(nullptr);
+			auto s = in.string();
+			
+			std::cerr << "*** def_failure(" << AST::typenames[asi.index()] << "): " << s << std::endl;
+		}
+		template< typename Input >
+		static std::function< void( const Input& in, std::vector<AST::StackItem> &v ) > start = def_failure<Input>;
+
 	};
 #endif
 	template< typename Rule >
@@ -517,7 +460,7 @@ namespace Ohm {
 		template< typename Input >
 		static void start( const Input& in, std::vector<AST::StackItem> &v )
 		{
-			std::cerr << "*** Grammars, start, sz=" << v.size() << std::endl;
+			std::cerr << "*** " << AST::typenameOf<AST::Grammars>() << " start, sz=" << v.size() << std::endl;
 
 			v.push_back( static_cast<AST::Grammars *>(nullptr) );
 		}
