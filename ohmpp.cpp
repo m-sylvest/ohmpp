@@ -1,4 +1,5 @@
 #include "ohm-ast-builder.hpp"
+#include "ohm-ast-json.hpp"
 #if 1
 #include <vector>
 #include <iostream>

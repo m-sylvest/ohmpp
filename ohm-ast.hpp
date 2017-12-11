@@ -63,6 +63,7 @@ namespace Ohm
 			name *,
 			terminal *,
 			caseName *,
+			RuleDescr *,
 			SuperGrammar *,
 			Base *,
 			Lex *,
@@ -72,7 +73,6 @@ namespace Ohm
 			ParamsAlt *,
 			TopLevelTerm *,
 			RuleBody *,
-			RuleDescr *,
 			Rule *,
 			Grammar *,
 			Grammars *
@@ -80,8 +80,8 @@ namespace Ohm
 		
 		// make sure that ordering + elements here strictly follows above variant:
 		const string typenames[] = {
-			"name", "terminal", "caseName", "SuperGrammar",
-			"Base", "Lex", "Pred", "Iter", "Seq", "ParmsAlt", "TopLevelTerm", "RuleBody", "RuleDescr", "Rule", "Grammar", "Grammars"
+			"name", "terminal", "caseName", "RuleDescr", "SuperGrammar",
+			"Base", "Lex", "Pred", "Iter", "Seq", "ParmsAlt", "TopLevelTerm", "RuleBody", "Rule", "Grammar", "Grammars"
 		};
 		
 		template< typename T >
