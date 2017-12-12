@@ -209,13 +209,14 @@ namespace Ohm {
 		template< typename Input >
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
-			char opc = in.string()[in.string().size()-1];
+			std::string s = trim(in.string());
+			char opc = s[s.size()-1];
 			std::string op = 
 							opc=='*' ? "*" : 
 							opc=='+' ? "+" : 
 							opc=='?' ? "?" : 
 							"";
-			std::cerr << "Iter: "<< in.string() << std::endl;
+			std::cerr << "Iter: "<< s << ", op=" << op << std::endl;
 			
 			v.push_back( new AST::Iter{ pop<AST::Pred>(v), op } );
 		}
