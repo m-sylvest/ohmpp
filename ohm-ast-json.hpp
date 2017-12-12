@@ -38,35 +38,34 @@ namespace Ohm {
 					std::cerr << "to_json(), type=" << Ohm::AST::typenames[s.index()] << std::endl;
 					
 					if constexpr (std::is_same_v<T, AST::name *>)
-						return json::object( { "name", arg->s } );
+						return json( {{ "name", arg->s }} );
 
 					else if constexpr (std::is_same_v<T, AST::terminal *>)
-						return json::object( { "terminal", arg->s } );
+						return json( {{ "terminal", arg->s }} );
 #if 1
 					// these are currently not used:
 					else if constexpr (std::is_same_v<T, AST::caseName *>)
 					{
-						return json::object( { "caseName", arg ? arg->s : "" } ) ;
+						return json( {{ "caseName", arg ? arg->s : "" }} ) ;
 					}
 
 					else if constexpr (std::is_same_v<T, AST::RuleDescr *>)
 					{
-						return json::object( { "ruleDescr", arg ? arg->s : "" } );
+						return json( {{ "ruleDescr", arg ? arg->s : "" }} );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::SuperGrammar *>)
 					{
-						return json::object( { "SuperGrammar", arg ? arg->s : "" } );
+						return json( {{ "SuperGrammar", arg ? arg->s : "" }} );
 					}
 #endif
 					else if constexpr (std::is_same_v<T, AST::Base *>)
 					{
-						json parms = listp2json( arg->paramsAlts );
 						switch( arg->type )
 						{
 							case Ohm::AST::Base::Type::Appl:
 								return json( {{ "Base", 
-										{ { "type", "Appl" }, { "name", arg->name }, { "Params", parms } }
+										{ { "type", "Appl" }, { "name", arg->name }, { "Params", listp2json( arg->paramsAlts ) } }
 								}} );
 								break;
 
@@ -84,7 +83,7 @@ namespace Ohm {
 
 							case Ohm::AST::Base::Type::Alt:
 								return json( {{ "Base", 
-										{ { "type", "Alt" }, { "Alt", parms } }
+										{ { "type", "Alt" }, { "Alt", listp2json( arg->paramsAlts ) } }
 								}} );
 								break;
 
@@ -117,26 +116,22 @@ namespace Ohm {
 
 					else if constexpr (std::is_same_v<T, AST::Seq *>)
 					{					
-						json seq = listp2json<AST::Iter>( arg );
-						return json( {{ "Seq", seq }} );
+						return json( {{ "Seq", listp2json<AST::Iter>( arg ) }} );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::TopLevelTerm *>)
 					{
-						json j = listp2json<AST::Iter>( arg->seq );
-						return json( {{ "TopLevelTerm", { { "caseName", arg->caseName }, { "Seq", j } } }} );
+						return json( {{ "TopLevelTerm", { { "caseName", arg->caseName }, { "Seq", listp2json<AST::Iter>( arg->seq ) } } }} );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::ParamsAlt *>)
 					{
-						json parms = listp2json( arg );
-						return json( {{ "Params", parms }} );
+						return json( {{ "Params", listp2json( arg ) }} );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::RuleBody *>)
 					{
-						json body = listp2json( arg );
-						return json( {{ "RuleBody", body }} );
+						return json( {{ "RuleBody", listp2json( arg ) }} );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::Rule *>)
@@ -147,34 +142,27 @@ namespace Ohm {
 							{ Ohm::AST::Rule::Type::Override, "Override"}
 						};
 						
-						std::string type  = "";
-						json parms = listp2json<AST::Seq>( arg->ruleParms );
-						json body  = listp2json<AST::TopLevelTerm>( arg->ruleBody );
-						
 						return json( {{ "Rule", {
 							{ "type",			typeMap[arg->type] },
 							{ "name",			arg->name },
 							{ "RuleDescr",	arg->rulesDescr },
-							{ "Params",		parms },
-							{ "RuleBody", body }
+							{ "Params",		listp2json( arg->ruleParms ) },
+							{ "RuleBody", listp2json( arg->ruleBody ) }
 						}	}} );
 					}
 
 					else if constexpr (std::is_same_v<T, AST::Grammar *>)
 					{
-						json rules = listp2json<AST::Rule>( arg->rules );
-						json j = json::object({ 
+						return json( {{ "Grammar", { 
 							{ "name",		arg->name },
 							{ "parent",	arg->parent },
-							{ "Rules",	rules }
-						});
-						return json( {{ "Grammar", j }} );
+							{ "Rules",	listp2json( arg->rules ) }
+						} }} );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::Grammars *>)
 					{
-						json grms = listp2json<AST::Grammar>( arg );
-						return json({{ "Grammars", grms }});
+						return json({{ "Grammars", listp2json( arg ) }});
 					}
 
 					else
