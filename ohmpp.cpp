@@ -10,6 +10,7 @@ namespace pegtl = tao::TAOCPP_PEGTL_NAMESPACE;
 
 int main( int argc, char *argv[] )
 {
+#ifdef ARGCV
   for( int i = 1; i < argc; ++i ) 
   {
     pegtl::argv_input<> in( argv, 1 );
@@ -51,12 +52,14 @@ int main( int argc, char *argv[] )
 #endif
     pegtl::parse< 
       pegtl::must< 
-          Ohm::GRM::Grammars
+          Ohm::GRM::name
       >, 
       Ohm::action, 
       Ohm::control 
     >( in, v );
     Ohm::dumpStack(v);
+    nlohmann::json j = nlohmann::json({ "ostemad", "havarti" });  //Ohm::JSON::to_json( v[0] );
+    std::cout << j << std::endl;      
 #if 0
     for( const auto& line : data ) {
        assert( !line.empty() );  // The grammar doesn't allow empty lines.
@@ -68,7 +71,23 @@ int main( int argc, char *argv[] )
     }
 #endif
    }
-	
+#else
+
+  char *text = (char *) "navne { peter += jakob* jesper tina -- karl\n}";
+  pegtl::argv_input<> in( &text, 0 );
+  std::vector<Ohm::AST::StackItem> v;
+  pegtl::parse< 
+    pegtl::must< 
+        Ohm::GRM::Grammars
+    >, 
+    Ohm::action, 
+    Ohm::control 
+  >( in, v );
+  Ohm::dumpStack(v);
+  nlohmann::json j = Ohm::JSON::to_json( v[0] );
+  std::cout << j.dump(2) << std::endl;      
+
+#endif	
 	return 0;
 }
 
