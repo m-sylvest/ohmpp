@@ -1,4 +1,4 @@
-Gpp = g++-7 -g3 -std=c++17 -I../../PEGTL/include/tao -I.
+Gpp = g++-7 -g -Wall -std=c++17 -I../../PEGTL/include/tao -I.
 trgt = ohmpp
 srcs = $(wildcard *.cpp)
 objs = $(srcs:.cpp=.o)

@@ -17,6 +17,10 @@
 #include "ohm-ast.hpp"
 #include <json/json.hpp>
 
+//
+// http://en.cppreference.com/w/cpp/utility/variant/visit has served as a skeletal example for creating this:
+//
+
 template<class T> struct always_false : std::false_type {};
 
 namespace Ohm {
@@ -64,30 +68,37 @@ namespace Ohm {
 						switch( arg->type )
 						{
 							case Ohm::AST::Base::Type::Appl:
-								return json( {{ "Base", 
-										{ { "type", "Appl" }, { "name", arg->name }, { "Params", listp2json( arg->paramsAlts ) } }
-								}} );
+								return json( {{ "Base", { 
+									{ "type", "Appl" }, 
+									{ "name", arg->name }, 
+									{ "Params", listp2json( arg->paramsAlts ) } 
+								} }} );
 								break;
 
 							case Ohm::AST::Base::Type::Term:
-								return json( {{ "Base", 
-										{ { "type", "Term" }, { "terminal", arg->name } }
-								}} );
+								return json( {{ "Base", { 
+									{ "type", "Term" }, 
+									{ "terminal", arg->name } 
+								} }} );
 								break;
 
 							case Ohm::AST::Base::Type::Range:
-								return json( {{ "Base", 
-										{ { "type", "Range" }, { "from", arg->rangeFrom }, { "to", arg->rangeTo } }
-								}} );
+								return json( {{ "Base", { 
+									{ "type", "Range" }, 
+									{ "from", arg->rangeFrom }, 
+									{ "to", arg->rangeTo } 
+								} }} );
 								break;
 
 							case Ohm::AST::Base::Type::Alt:
-								return json( {{ "Base", 
-										{ { "type", "Alt" }, { "Alt", listp2json( arg->paramsAlts ) } }
-								}} );
+								return json( {{ "Base",  { 
+									{ "type", "Alt" }, 
+									{ "Alt", listp2json( arg->paramsAlts ) } 
+								} }} );
 								break;
 
 							default:	
+								std::cerr << "Unhandled case value, " << static_cast<int>(arg->type) << std::endl;
 								assert( false );
 								break;
 						}
@@ -121,7 +132,10 @@ namespace Ohm {
 
 					else if constexpr (std::is_same_v<T, AST::TopLevelTerm *>)
 					{
-						return json( {{ "TopLevelTerm", { { "caseName", arg->caseName }, { "Seq", listp2json<AST::Iter>( arg->seq ) } } }} );
+						return json( {{ "TopLevelTerm", { 
+							{ "caseName", arg->caseName }, 
+							{ "Seq", listp2json<AST::Iter>( arg->seq ) } 
+						} }} );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::ParamsAlt *>)
@@ -166,7 +180,8 @@ namespace Ohm {
 					}
 
 					else
-						static_assert( always_false<T>::value, "Incomplete visitor :-(" );
+            static_assert(always_false<T>::value, "non-exhaustive visitor!");
+
         }, si);			
 		}
 

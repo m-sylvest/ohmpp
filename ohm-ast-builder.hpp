@@ -31,9 +31,8 @@ namespace Ohm {
 	namespace pegtl = tao::TAOCPP_PEGTL_NAMESPACE;
 
 	void dumpStack( std::vector<AST::StackItem> v )
-	{
-		int i = 0;
-		for( const auto &e: v )
+	{	
+		for( size_t i = 0; i<v.size() ; i++ )
 		{
 			std::cerr << "dS(" << i << "), index=" << v[i].index() << std::endl;
 			i++;
