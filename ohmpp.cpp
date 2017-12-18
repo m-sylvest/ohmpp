@@ -1,6 +1,6 @@
 #include "ohm-ast-builder.hpp"
 #include "ohm-ast-json.hpp"
-//#include "ohmpp-gen-grm.hpp"
+#include "ohmpp-gen-grm.hpp"
 #if 1
 #include <vector>
 #include <iostream>
@@ -86,7 +86,8 @@ int main( int argc, char *argv[] )
   >( in, v );
   Ohm::dumpStack(v);
   nlohmann::json j = Ohm::JSON::to_json( v[0] );
-  std::cout << j.dump(2) << std::endl;      
+//  std::cout << j.dump(2) << std::endl;      
+  std::cout << Ohm::GenGRM::to_pegtl( v[0] );
 
 #endif	
 	return 0;

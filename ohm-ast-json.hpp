@@ -106,35 +106,35 @@ namespace Ohm {
 
 					else if constexpr (std::is_same_v<T, AST::Lex *>)
 					{
-						json j = to_json(arg->base);
+						json &&j = to_json(arg->base);
 						j["hashPrefix"] = arg->hashPrefix;
 						return json( {{ "Lex", j }} );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::Pred *>)
 					{
-						json j = to_json(arg->lex);
+						json &&j = to_json(arg->lex);
 						j["op"] = arg->op;
 						return json( {{ "Pred", j }} );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::Iter *>)
 					{
-						json j = to_json(arg->pred);
+						json &&j = to_json(arg->pred);
 						j["op"] = arg->op;
 						return json( {{ "Iter", j }} );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::Seq *>)
 					{					
-						return json( {{ "Seq", listp2json<AST::Iter>( arg ) }} );
+						return json( {{ "Seq", listp2json( arg ) }} );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::TopLevelTerm *>)
 					{
 						return json( {{ "TopLevelTerm", { 
 							{ "caseName", arg->caseName }, 
-							{ "Seq", listp2json<AST::Iter>( arg->seq ) } 
+							{ "Seq", listp2json( arg->seq ) } 
 						} }} );
 					}							
 

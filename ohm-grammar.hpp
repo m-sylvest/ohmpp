@@ -11,9 +11,6 @@ namespace Ohm {
     struct SuperGrammar;
     
 		struct Rule;
-    struct Rule_Define;
-    struct Rule_Override;
-    struct Rule_Extend;
 		
     struct RuleBody;
 		
@@ -176,13 +173,8 @@ namespace Ohm {
 							>
 						>
 					> {};
-#if 0
-		struct Iter_Star : seq< Pred, one<'*'> > {};
-		struct Iter_Plus : seq< Pred, one<'+'> > {};
-		struct Iter_Opt  : seq< Pred, one<'?'> > {};
-#endif    
 
-    //  Pred
+		//  Pred
     //    = "~" Lex  -- not
     //    | "&" Lex  -- lookahead
     //    | Lex

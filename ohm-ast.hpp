@@ -90,6 +90,11 @@ namespace Ohm
 			StackItem si = static_cast<T *>(nullptr);
 			return typenames[si.index()];		
 		}
+
+		string typenameOf(StackItem si)
+		{
+			return typenames[si.index()];		
+		}
 	}
 };
 
