@@ -74,7 +74,15 @@ int main( int argc, char *argv[] )
    }
 #else
 
-  char *text = (char *) "navne { peter += jakob* jesper tina -- karl\n}";
+  char *text = (char *) R"(
+navne { 
+  Peter += Jakob* "jesper" Tina+ -- karl
+
+  Jakob = "jakob" -- ost
+  Tina  = "TINA" -- x
+}
+)";
+  
   pegtl::argv_input<> in( &text, 0 );
   std::vector<Ohm::AST::StackItem> v;
   pegtl::parse< 

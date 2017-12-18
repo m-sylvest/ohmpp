@@ -1,4 +1,4 @@
-#include <pegtl.hpp>
+#include <ohmpp.hpp>
 
 namespace Ohm {
 
@@ -15,19 +15,13 @@ namespace Ohm {
     struct RuleBody;
 		
     struct TopLevelTerm;
-		struct TopLevelTerm_CaseName;
-		struct TopLevelTerm_Seq;
-		
+
     struct Formals;
     struct Params;
     struct Alt;
     struct Seq;
 		
     struct Iter;
-    struct Iter_Star;
-    struct Iter_Plus;
-    struct Iter_Opt;
-    struct Iter_Pred;
 
     struct Pred;
     struct Pred_Not;
@@ -35,7 +29,7 @@ namespace Ohm {
     struct Pred_Lex;
 
     struct Lex;
-    struct Lex_Lex;
+    struct Lex_Hash;
     struct Lex_Base;
 
     struct Base;
@@ -61,27 +55,6 @@ namespace Ohm {
     struct token;
     struct operator_;
     struct punctuation;
-
-    // helpers for Ohm - capitalisation / padding;
-    template < typename ...T >
-    struct STAR : pad< star<T ...>, space_ > {};
-
-    template < typename ... T >
-    struct SEQ : pad< seq<T ...>, space_ > {};
-
-    template < typename ... T >
-    struct SOR : pad< sor<T ...>, space_ > {};
-
-    template < typename ... T >
-    struct OPT : pad< opt<T ...>, space_ > {};
-
-    // NonEmptyListOf:
-    template < typename T, typename P >
-    struct NonEmptyListOf : pad< list< T, P >, space_ > {};
-
-    // ListOf:
-    template < typename T, typename P >
-    struct ListOf : opt< NonEmptyListOf<T,P> > {};
 
     //
     // Here comes the Ohm grammar in PEGTL parlance:
@@ -188,9 +161,9 @@ namespace Ohm {
     //  Lex
     //    = "#" Base  -- lex
     //    | Base
-    struct Lex : sor< Lex_Lex, Lex_Base > {};
+    struct Lex : sor< Lex_Hash, Lex_Base > {};
 		
-		struct Lex_Lex : seq< one<'#'>, Base > {};
+		struct Lex_Hash : seq< one<'#'>, Base > {};
 	
 		struct Pred_Lex       : seq<Lex> {};
 

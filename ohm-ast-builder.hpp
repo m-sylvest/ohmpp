@@ -102,7 +102,7 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cerr << "Base_Terminal: "<< in.string() << std::endl;
-			v.push_back( new AST::Base{ AST::Base::Type::Term, pop<AST::name>(v)->s } );
+			v.push_back( new AST::Base{ AST::Base::Type::Term, pop<AST::terminal>(v)->s } );
 		}
 	};
 	
@@ -134,7 +134,7 @@ namespace Ohm {
 	//    = "#" Base  -- lex
 	//    | Base
 	template<> 
-	struct action< GRM::Lex_Lex >
+	struct action< GRM::Lex_Hash >
 	{
 		template< typename Input >
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )

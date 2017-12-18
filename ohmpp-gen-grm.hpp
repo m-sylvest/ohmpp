@@ -18,10 +18,13 @@
 #include "ohm-ast.hpp"
 #include <map>
 
-
+//
+// This will hold the namespace prefix of the grammar, such as 'myGrammar::'
+//
+const std::string NP;
 
 template < typename T, typename U = std::string, typename S = std::string >
-U join( T cont, S sep )
+U join( T &cont, S &sep )
 {
 	auto b = cont.cbegin();
 	auto e = cont.cend();
@@ -49,20 +52,6 @@ std::string map_join( std::list<T> *l, F mapper, std::string sep )
 	return join( result, sep );
 }
 
-#if 0
-std::string to_string2( int i )
-{
-	return "x";
-}
-
-std::string test_map_join()
-{
-	std::list<int> v = { 1,2,3 };
-	std::function f = to_string2 ;
-	return map_join( &v, f, " " );	
-}
-#endif
-
 std::string replace( const std::string template_, const std::map<std::string,std::string> replacements )
 {
 	std::string result = template_;
@@ -74,61 +63,35 @@ std::string replace( const std::string template_, const std::map<std::string,std
 	return result;
 }
 
+std::string templ( std::string t, std::string s )
+{
+	return t + "< " + s + " >";
+}
+
+std::string get_forward_decl( Ohm::AST::Rule *r )
+{
+	return "  struct " + r->name + "_;";
+}
+
+
 namespace Ohm {
 	namespace GenGRM {
-#if 0
-		std::string to_pegtlIter( AST::Iter *r )
-		{
-			if( r->op == "*" ) 
-			{
-				
-				
-			}
-			else if( r->op == "+" ) 
-			{
-				
-			}
-			else
-			{
-				
-			};			
-		}
-	
-		std::string to_pegtlTopLevelTerm( AST::TopLevelTerm *r )
-		{
-			return "";			
-		}
-	
-		std::string to_pegtlGrammar( AST::Grammar *g )
-		{
-			const std::string GrammarTemplate = "struct {{GRAMMAR}}_ : {{SEQ}}<{{RULES}}> {};";
-
-			std::map<std::string,std::string> repl = { 
-				{ "GRAMMAR",	g->name }, 
-				{ "SEQ",			(g->name[0] & 0x20) ? "seq" :"SEQ" },
-				{ "RULES",		map_join( g->rules, to_pegtlRule, std::string(", ") )  }
-			};
-			
-			return replace( GrammarTemplate, repl );			
-		}
-#endif
 		
-		std::string to_pegtl( Ohm::AST::StackItem si )
+		std::string to_pegtl( AST::StackItem si )
 		{
         return std::visit([](auto&& arg) -> std::string {
 					
 					using T = std::decay_t<decltype(arg)>;
 
-					Ohm::AST::StackItem s = arg;
-					std::cerr << "to_pegtl(), type=" << Ohm::AST::typenames[s.index()] << std::endl;
+					std::cerr << "to_pegtl(), type=" << AST::typenameOf(arg) << std::endl;
 					
 					if constexpr (std::is_same_v<T, AST::name *>)
-						return arg->s;
+						return arg->s + "_";
 
 					else if constexpr (std::is_same_v<T, AST::terminal *>)
 						return arg->s;
 #if 1
-					// these are currently not used:
+					// these 3 symbols are currently copied by ast-builder and thus not JSON/PEGTL generated:
 					else if constexpr (std::is_same_v<T, AST::caseName *>)
 					{
 						return arg ? arg->s : "";
@@ -148,25 +111,27 @@ namespace Ohm {
 					{
 						switch( arg->type )
 						{
-							case Ohm::AST::Base::Type::Appl:
-								return arg->name;
+							case AST::Base::Type::Appl:
+								return arg->name + "_";
 								break;
 
-							case Ohm::AST::Base::Type::Term:
+							case AST::Base::Type::Term:
 							{
 								std::list<std::string> as_letters;
 								
 								std::transform( arg->name.cbegin(), arg->name.cend(), std::back_inserter(as_letters), [](char c){ return std::string("'") + c + "'";  } );
 								
-								return "string< " + join( as_letters, "," ) + " >";
+								return templ( "string", join(as_letters, ",") );
 								break;
 							}
-							case Ohm::AST::Base::Type::Range:
-								return "range< arg->rangeFrom[0], arg->rangeto[0] >";
+							case AST::Base::Type::Range:
+							{
+								std::list<std::string> intv = { arg->rangeFrom.substr(0,1), arg->rangeTo.substr(0,1) };
+								return templ( "range", join(intv, ",") );
 								break;
-
-							case Ohm::AST::Base::Type::Alt:
-								return "SOR< " + to_pegtl(arg->paramsAlts) + " >";
+							}
+							case AST::Base::Type::Alt:
+								return templ( "SOR", to_pegtl(arg->paramsAlts) );
 								break;
 
 							default:	
@@ -180,23 +145,23 @@ namespace Ohm {
 					{
 						if( arg->hashPrefix ) 
 						{
-							return "hash< " + to_pegtl( arg->base ) + " >";	// TODO
+							return templ( "hash", to_pegtl( arg->base ) );	// TODO
 						}
 						else
 						{
 							return to_pegtl( arg->base );
 						};			
-					}							
+					}
 
 					else if constexpr (std::is_same_v<T, AST::Pred *>)
 					{
 						if( arg->op == "~" ) 
 						{
-							return "not_at< " + to_pegtl( arg->lex ) + " >";
+							return templ( "not_at",to_pegtl( arg->lex ) );
 						}
 						else if( arg->op == "&" ) 
 						{
-							return "at< " + to_pegtl( arg->lex ) + " >";
+							return templ( "at", to_pegtl( arg->lex ) );
 						}
 						else
 						{
@@ -208,15 +173,15 @@ namespace Ohm {
 					{
 						if( arg->op == "*" ) 
 						{
-							return "star< " + to_pegtl( arg->pred ) + " >";
+							return templ( "star", to_pegtl( arg->pred ) );
 						}
 						else if( arg->op == "+" ) 
 						{
-							return "plus< " + to_pegtl( arg->pred ) + " >";
+							return templ( "plus", to_pegtl( arg->pred ) );
 						}
 						else if( arg->op == "?" ) 
 						{
-							return "opt< " + to_pegtl( arg->pred ) + " >";
+							return templ( "opt",  to_pegtl( arg->pred ) );
 						}
 						else
 						{
@@ -231,7 +196,7 @@ namespace Ohm {
 
 					else if constexpr (std::is_same_v<T, AST::TopLevelTerm *>)
 					{
-						return "SEQ< " + map_join(arg->seq, to_pegtl, ", " ) + " >";
+						return templ( "SEQ", map_join(arg->seq, to_pegtl, ", " ) );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::ParamsAlt *>)
@@ -246,7 +211,7 @@ namespace Ohm {
 
 					else if constexpr (std::is_same_v<T, AST::Rule *>)
 					{
-						const std::string RuleTemplate = "struct {{RULE}}_ : {{SOR}}<{{BODY}}> {};";
+						const std::string RuleTemplate = "  struct {{RULE}}_ : {{SOR}}<{{BODY}}> {};";
 
 						std::map<std::string,std::string> repl = { 
 							{ "RULE",			arg->name }, 
@@ -259,7 +224,15 @@ namespace Ohm {
 
 					else if constexpr (std::is_same_v<T, AST::Grammar *>)
 					{
-						return " struct " + arg->name + " : " + map_join( arg->rules, to_pegtl, ";\n\n" ) + " };"; 
+						return 
+							"\n\n"
+							"#include <ohmpp.hpp>\n\n"
+							"namespace " + arg->name + " {\n"
+					    "  using namespace tao::TAOCPP_PEGTL_NAMESPACE;\n"
+					    "  using namespace Ohm::GRM;\n\n"
+						+	map_join( arg->rules, get_forward_decl, "\n" ) + "\n\n"
+						+ map_join( arg->rules, to_pegtl, "\n" ) + "\n"
+						+	"}\n\n";					
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::Grammars *>)
@@ -272,18 +245,7 @@ namespace Ohm {
 
         }, si);			
 		}
-#if 0
-		template< typename T >
-		std::string listp2pegtl( std::list<T*> *t )
-		{
-			std::list<std::string> l;
-			if( t )
-				for( const auto tt : *t )
-					l.emplace_back( to_pegtl(AST::StackItem(tt)) );
-			
-			return l;
-		}
-#endif
+
 	}
 }
 #endif /* OHMPP_GEN_GRM_HPP */
