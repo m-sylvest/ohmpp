@@ -52,12 +52,12 @@ std::string map_join( std::list<T> *l, F mapper, std::string sep )
 	return join( result, sep );
 }
 
-std::string replace( const std::string template_, const std::map<std::string,std::string> replacements )
+std::string replace( const std::string &template_, const std::map<std::string,std::string> &replacements )
 {
 	std::string result = template_;
 	for( const auto [k,v] : replacements )
 	{
-		std::string repl_key = std::string("{{") + k +  std::string("}}") ;
+		std::string repl_key = "{{" + k + "}}";
 		result.replace( result.find(repl_key), repl_key.length(), v);
 	}
 	return result;
@@ -224,20 +224,35 @@ namespace Ohm {
 
 					else if constexpr (std::is_same_v<T, AST::Grammar *>)
 					{
-						return 
-							"\n\n"
-							"#include <ohmpp.hpp>\n\n"
-							"namespace " + arg->name + " {\n"
-					    "  using namespace tao::TAOCPP_PEGTL_NAMESPACE;\n"
-					    "  using namespace Ohm::GRM;\n\n"
-						+	map_join( arg->rules, get_forward_decl, "\n" ) + "\n\n"
-						+ map_join( arg->rules, to_pegtl, "\n" ) + "\n"
-						+	"}\n\n";					
-					}							
+						auto pegtl_template = R"(
+namespace {{GRM_NAME}} {
+
+  using namespace tao::TAOCPP_PEGTL_NAMESPACE;
+  using namespace Ohm::GRM;
+
+{{FWD_DECLS}}
+
+{{PEGTL_DECLS}} 	
+
+  struct start__symbol : {{FIRST_RULE}} {};
+}
+)";
+						AST::Rule  *firstRule = (arg->rules && arg->rules->size()>0) ? *(arg->rules->begin()) : nullptr;
+						std::string firstRuleName = firstRule ? firstRule->name + "_" : "success";
+
+						std::map<std::string,std::string> repl = { 
+							{ "GRM_NAME",			arg->name }, 
+							{ "FWD_DECLS",		map_join( arg->rules, get_forward_decl, "\n" ) },
+							{ "PEGTL_DECLS",	map_join( arg->rules, to_pegtl, "\n" ) },
+							{ "FIRST_RULE",		firstRuleName }
+						};
+						
+						return replace( pegtl_template, repl );
+					}
 
 					else if constexpr (std::is_same_v<T, AST::Grammars *>)
 					{
-						return map_join( arg, to_pegtl, std::string("\n\n\n") );
+						return "\n#include <ohmpp.hpp>\n\n" + map_join( arg, to_pegtl, "\n\n" );
 					}
 
 					else

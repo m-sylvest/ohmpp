@@ -1,11 +1,11 @@
 #include "ohm-ast-builder.hpp"
 #include "ohm-ast-json.hpp"
 #include "ohmpp-gen-grm.hpp"
-#if 1
 #include <vector>
 #include <iostream>
 #include <iomanip>
-#endif
+#include <catch/catch.hpp>
+
 
 namespace pegtl = tao::TAOCPP_PEGTL_NAMESPACE;
 
