@@ -1,10 +1,12 @@
 #include "ohm-ast-builder.hpp"
 #include "ohm-ast-json.hpp"
-#include "ohmpp-gen-grm.hpp"
+#include "ohm-gen-grm.hpp"
 #include <vector>
 #include <iostream>
 #include <iomanip>
-#include <catch/catch.hpp>
+
+#define CATCH_CONFIG_RUNNER
+#include "catch.hpp"
 
 
 namespace pegtl = tao::TAOCPP_PEGTL_NAMESPACE;
@@ -73,6 +75,7 @@ int main( int argc, char *argv[] )
 #endif
    }
 #else
+  Catch::Session().run( argc, argv );
 
   char *text = (char *) R"(
 navne { 
@@ -100,4 +103,3 @@ navne {
 #endif	
 	return 0;
 }
-

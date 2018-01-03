@@ -79,10 +79,7 @@ namespace Ohm
 		> StackItem;
 		
 		// make sure that ordering + elements here strictly follows above variant:
-		const string typenames[] = {
-			"name", "terminal", "caseName", "RuleDescr", "SuperGrammar",
-			"Base", "Lex", "Pred", "Iter", "Seq", "ParmsAlt", "TopLevelTerm", "RuleBody", "Rule", "Grammar", "Grammars"
-		};
+		extern const string typenames[];
 		
 		template< typename T >
 		constexpr string typenameOf()
@@ -91,10 +88,8 @@ namespace Ohm
 			return typenames[si.index()];		
 		}
 
-		string typenameOf(StackItem si)
-		{
-			return typenames[si.index()];		
-		}
+		string typenameOf(StackItem si);		
+		
 	}
 };
 

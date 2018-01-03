@@ -4,7 +4,6 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
-//#include <functional>
 
 //
 // From https://stackoverflow.com/questions/1798112/removing-leading-and-trailing-spaces-from-a-string
@@ -14,32 +13,14 @@
 // s.erase(s.find_last_not_of(" \n\r\t")+1); 
 //
 std::string trim(const std::string& str,
-                 const std::string& whitespace = " \t")
-{
-    const auto strBegin = str.find_first_not_of(whitespace);
-    if (strBegin == std::string::npos)
-        return ""; // no content
-
-    const auto strEnd = str.find_last_not_of(whitespace);
-    const auto strRange = strEnd - strBegin + 1;
-
-    return str.substr(strBegin, strRange);
-}
+                 const std::string& whitespace = " \t");
 
 namespace Ohm {
 
 	namespace pegtl = tao::TAOCPP_PEGTL_NAMESPACE;
 
-	void dumpStack( std::vector<AST::StackItem> v )
-	{	
-		for( size_t i = 0; i<v.size() ; i++ )
-		{
-			std::cerr << "dS(" << i << "), index=" << v[i].index() << std::endl;
-			i++;
-		}
-		std::cerr.flush();
-	}
-	
+	void dumpStack( std::vector<AST::StackItem> v );
+
 	template< typename T >
 	static T *pop(std::vector<AST::StackItem> &v)
 	{
