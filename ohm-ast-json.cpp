@@ -5,6 +5,8 @@
  */
 
 #include "ohm-ast-json.hpp"
+#include <iostream>
+
 //
 // http://en.cppreference.com/w/cpp/utility/variant/visit has served as a skeletal example for creating this:
 //

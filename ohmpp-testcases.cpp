@@ -3,14 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-#if 1
 #include "ohm-ast-builder.hpp"
 #include "ohm-gen-grm.hpp"
 #include <vector>
 #include <iostream>
 #include <iomanip>
 
-#include "catch.hpp"
+#include <catch/catch.hpp>
 
 namespace pegtl = tao::TAOCPP_PEGTL_NAMESPACE;
 
@@ -41,6 +40,4 @@ navne {
   {
     REQUIRE( 1 == 1 );
   }
-}  
-
-#endif
+}
