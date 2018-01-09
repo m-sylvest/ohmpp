@@ -108,7 +108,7 @@ namespace Ohm {
 		{
 			std::cerr << "Base_Paren: "<< in.string() << std::endl;
 			dumpStack(v);
-			v.push_back( new AST::Base{ AST::Base::Type::Alt, "", nullptr, popM<AST::Alts>(v) } );
+			v.push_back( new AST::Base{ AST::Base::Type::Alt, "<paren>", nullptr, popM<AST::Alt>(v) } );
 		}
 	};
 	
@@ -121,7 +121,7 @@ namespace Ohm {
 			auto s = in.string();
 			const char *from = &s[0], *to = &s[s.size()-1];
 			std::cerr << "Base_Range: " << s << " = " << from << ".." << to << std::endl;
-			v.push_back( new AST::Base{ AST::Base::Type::Range, "", nullptr, nullptr, from, to } );
+			v.push_back( new AST::Base{ AST::Base::Type::Range, "<range>", nullptr, nullptr, from, to } );
 		}
 	};
 	
@@ -380,6 +380,76 @@ namespace Ohm {
 	template< typename Rule >
 	struct control : pegtl::normal< Rule >
 	{
+	};
+
+	template<>
+	struct control< GRM::Params > : pegtl::normal< GRM::Params >
+	{
+		template< typename Input >
+		static void start( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cerr << "*** Params, start, sz=" << v.size() << std::endl;
+
+			v.push_back( static_cast<AST::Params *>(nullptr) );
+		}
+		
+		template< typename Input >
+		static void failure( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			if( !v.empty() )
+				std::cerr << "*** Params, failure: sz=" << v.size() << ", index=" << v.back().index() << std::endl;
+			
+			if( auto e = pop<AST::Params>(v) ; e )
+			{
+				delete e;
+			}
+		}
+
+		template< typename Input >
+		static void success( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cerr << "*** Params, success, sz=" << v.size() << std::endl;
+			dumpStack(v);
+
+			auto seq = pop_any<AST::Seq>(v) ;
+			v.back() = new AST::Params { seq ? *seq : std::list<AST::Seq *>() };
+			std::cerr << "Params: sz=" << v.size() << ", index=" << v.back().index() << std::endl;
+		}
+	};
+
+	template<>
+	struct control< GRM::Alt > : pegtl::normal< GRM::Alt >
+	{
+		template< typename Input >
+		static void start( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cerr << "*** Alt, start, sz=" << v.size() << std::endl;
+
+			v.push_back( static_cast<AST::Alt *>(nullptr) );
+		}
+		
+		template< typename Input >
+		static void failure( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			if( !v.empty() )
+				std::cerr << "*** Alt, failure: sz=" << v.size() << ", index=" << v.back().index() << std::endl;
+			
+			if( auto e = pop<AST::Alt>(v) ; e )
+			{
+				delete e;
+			}
+		}
+
+		template< typename Input >
+		static void success( const Input& in, std::vector<AST::StackItem> &v )
+		{
+			std::cerr << "*** Alt, success, sz=" << v.size() << std::endl;
+			dumpStack(v);
+
+			auto seq = pop_any<AST::Seq>(v) ;
+			v.back() = new AST::Alt { seq ? *seq : std::list<AST::Seq *>() };
+			std::cerr << "Alt: sz=" << v.size() << ", index=" << v.back().index() << std::endl;
+		}
 	};
 
 	template<>

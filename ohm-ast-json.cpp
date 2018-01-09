@@ -130,7 +130,7 @@ namespace Ohm {
 						return json( {{ "Params", listp2json( &arg->l ) }} );
 					}							
 
-					else if constexpr (std::is_same_v<T, AST::Alts *>)
+					else if constexpr (std::is_same_v<T, AST::Alt *>)
 					{
 						return json( {{ "Alts", listp2json( &arg->l ) }} );
 					}							

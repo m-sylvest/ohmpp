@@ -157,7 +157,7 @@ namespace Ohm {
 						return "";
 					}							
 
-					else if constexpr (std::is_same_v<T, AST::Alts *>)
+					else if constexpr (std::is_same_v<T, AST::Alt *>)
 					{
 						return "";
 					}							

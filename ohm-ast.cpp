@@ -16,7 +16,7 @@ namespace Ohm
 		// make sure that ordering + elements here strictly follows variant-decl:
 		const string typenames[] = {
 			"name", "terminal", "caseName", "RuleDescr", "SuperGrammar",
-			"Base", "Lex", "Pred", "Iter", "Seq", "Params", "Alts", "TopLevelTerm", "RuleBody", "Rule", "Grammar", "Grammars"
+			"Base", "Lex", "Pred", "Iter", "Seq", "Params", "Alt", "TopLevelTerm", "RuleBody", "Rule", "Grammar", "Grammars"
 		};
 		
 		string typenameOf(StackItem si)

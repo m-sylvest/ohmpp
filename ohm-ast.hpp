@@ -40,8 +40,8 @@ namespace Ohm
 		 
 		typedef struct { Seq *seq; string caseName; } TopLevelTerm;
 		typedef list<TopLevelTerm *> RuleBody;
-		typedef struct { list<Seq *> l; }Params;
-		typedef struct { list<Seq *> l; } Alts;
+		typedef struct { list<Seq *> l; } Params;
+		typedef struct { list<Seq *> l; } Alt;
 		typedef struct { 
 			enum class Type { Define, Override, Extend  } type;
 			string name, rulesDescr;
@@ -56,7 +56,7 @@ namespace Ohm
 			enum class Type { Appl, Range, Term, Alt } type;
 			string name; 
 			Params *params; 
-			Alts   *alts; 
+			Alt   *alts; 
 			string rangeFrom, rangeTo; 
 		} Base;
 
@@ -73,7 +73,7 @@ namespace Ohm
 			Iter *,
 			Seq *,
 			Params *,
-			Alts *,
+			Alt *,
 			TopLevelTerm *,
 			RuleBody *,
 			Rule *,

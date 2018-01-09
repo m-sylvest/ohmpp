@@ -117,15 +117,15 @@ CSV4 {
   }
 #endif  
 
-#if 0
+#if 1
   SECTION( "Full CSV example from https://github.com/harc/ohm/blob/master/examples/csv/csv.ohm" )
   {
     char *text = (char *) R"(
 CSV {
-  csv = row (eol ~end row)* eol -- t1
-  row = col ("," col)*
-  col = colChar*
-  colChar = ~(eol | ",") any
+  csv = row (eol ~end row)* eol -- t
+  row = col ("," col)* -- p
+  col = colChar*  -- c
+  colChar = ~(eol | ",") any 
   eol = "\r"? "\n"
 }
 )";
