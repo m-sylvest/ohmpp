@@ -26,7 +26,7 @@ namespace Ohm {
 	{
 		if( !v.empty() && std::holds_alternative<T *>(v.back()) )
 		{
-			std::cerr << "Enter pop(), size=" << v.size() << ", index=" << v.back().index() << std::endl;
+			std::cerr << "Enter pop(), size=" << v.size() << ", type = " << typenameOf(v.back()) << std::endl;
 			auto e = std::get<T *>(v.back());
 			v.pop_back();
 			std::cerr << "Exit pop() A, size=" << v.size() << std::endl;
@@ -40,9 +40,22 @@ namespace Ohm {
 	}
 	
 	template< typename T >
+	static T *popM(std::vector<AST::StackItem> &v)
+	{
+		// a pop that shuold not fail:
+		std::cerr << "Enter popM(), size=" << v.size() << ", type = " << typenameOf(static_cast<T *>(nullptr)) << std::endl;
+		assert( !v.empty() && std::holds_alternative<T *>(v.back()) );
+		
+		auto e = std::get<T *>(v.back());
+		v.pop_back();
+		std::cerr << "Exit popM() A, size=" << v.size() << std::endl;
+		return e;
+	}
+	
+	template< typename T >
 	static std::list<T *> *pop_any(std::vector<AST::StackItem> &v)
 	{
-		std::cerr << "Enter pop_any, size=" << v.size() << ", index=" << v.back().index() << std::endl;
+		std::cerr << "Enter pop_any, size=" << v.size() << ", type = " << typenameOf(v.back()) << std::endl;
 		auto result = new std::list<T *>();
 
 		for( auto top = pop<T>(v); top ; top = pop<T>(v) )
@@ -71,8 +84,8 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cerr << "Base_Appl: "<< in.string() << std::endl;
-			auto ps = pop<AST::ParamsAlt>(v);
-			v.push_back( new AST::Base{ AST::Base::Type::Appl, pop<AST::name>(v)->s, ps, "", "" } );
+			auto ps = pop<AST::Params>(v);
+			v.push_back( new AST::Base{ AST::Base::Type::Appl, popM<AST::name>(v)->s, ps } );
 		}
 	};
 	
@@ -83,7 +96,7 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cerr << "Base_Terminal: "<< in.string() << std::endl;
-			v.push_back( new AST::Base{ AST::Base::Type::Term, pop<AST::terminal>(v)->s } );
+			v.push_back( new AST::Base{ AST::Base::Type::Term, popM<AST::terminal>(v)->s } );
 		}
 	};
 	
@@ -94,7 +107,8 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cerr << "Base_Paren: "<< in.string() << std::endl;
-			v.push_back( new AST::Base{ AST::Base::Type::Alt, "", pop<AST::ParamsAlt>(v) } );
+			dumpStack(v);
+			v.push_back( new AST::Base{ AST::Base::Type::Alt, "", nullptr, popM<AST::Alts>(v) } );
 		}
 	};
 	
@@ -107,7 +121,7 @@ namespace Ohm {
 			auto s = in.string();
 			const char *from = &s[0], *to = &s[s.size()-1];
 			std::cerr << "Base_Range: " << s << " = " << from << ".." << to << std::endl;
-			v.push_back( new AST::Base{ AST::Base::Type::Range, "", nullptr, from, to } );
+			v.push_back( new AST::Base{ AST::Base::Type::Range, "", nullptr, nullptr, from, to } );
 		}
 	};
 	
@@ -121,7 +135,7 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cerr << "LexL: "<< in.string() << std::endl;
-			v.push_back( new AST::Lex{ true, pop<AST::Base>(v) } );
+			v.push_back( new AST::Lex{ true, popM<AST::Base>(v) } );
 		}
 	};
 
@@ -132,7 +146,7 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cerr << "LexB: "<< in.string() << std::endl;
-			v.push_back( new AST::Lex{ false, pop<AST::Base>(v) } );
+			v.push_back( new AST::Lex{ false, popM<AST::Base>(v) } );
 		}
 	};
 
@@ -147,7 +161,7 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cerr << "Pred_Not: "<< in.string() << std::endl;
-			v.push_back( new AST::Pred{ "~", pop<AST::Lex>(v) } );
+			v.push_back( new AST::Pred{ "~", popM<AST::Lex>(v) } );
 		}
 	};
 
@@ -158,7 +172,7 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cerr << "Pred_Lookahead: "<< in.string() << std::endl;
-			v.push_back( new AST::Pred{ "&", pop<AST::Lex>(v) } );
+			v.push_back( new AST::Pred{ "&", popM<AST::Lex>(v) } );
 		}
 	};
 
@@ -169,7 +183,7 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cerr << "Pred_Lex: "<< in.string() << std::endl;
-			v.push_back( new AST::Pred{ "", pop<AST::Lex>(v) } );
+			v.push_back( new AST::Pred{ "", popM<AST::Lex>(v) } );
 		}
 	};
 
@@ -198,7 +212,7 @@ namespace Ohm {
 							"";
 			std::cerr << "Iter: "<< s << ", op=" << op << std::endl;
 			
-			v.push_back( new AST::Iter{ pop<AST::Pred>(v), op } );
+			v.push_back( new AST::Iter{ popM<AST::Pred>(v), op } );
 		}
 	};
 
@@ -212,7 +226,7 @@ namespace Ohm {
 			
 			auto caseName = pop<AST::caseName>(v);
 			std::string caseN = caseName ? caseName->s : "";
-			v.push_back( new AST::TopLevelTerm{ pop<AST::Seq>(v), caseN } );
+			v.push_back( new AST::TopLevelTerm{ popM<AST::Seq>(v), caseN } );
 		}
 	};
 	
@@ -239,12 +253,12 @@ namespace Ohm {
 							op1==':' ? AST::Rule::Type::Override :
 							AST::Rule::Type::Define;
 
-			auto ruleBody = pop<AST::RuleBody>(v);
+			auto ruleBody = popM<AST::RuleBody>(v);
 			auto ruleDescr= pop<AST::RuleDescr>(v);
 			auto rdtxt		= ruleDescr ? ruleDescr->s : "";
-			auto ruleParms= pop<AST::ParamsAlt>(v);
+			auto ruleParms= pop<AST::Params>(v);
 			auto id				= pop<AST::name>(v);
-			v.push_back( new AST::Rule{ t, id->s, rdtxt, ruleBody, ruleParms } );
+			v.push_back( new AST::Rule{ t, id ? id->s : "", rdtxt, ruleBody, ruleParms } );
 		}
 	};
 
@@ -256,7 +270,7 @@ namespace Ohm {
 		{
 			std::cerr << "SuperGrammar: "<< in.string() << std::endl;
 			
-			v.push_back( new AST::SuperGrammar{ pop<AST::name>(v)->s } );
+			v.push_back( new AST::SuperGrammar{ popM<AST::name>(v)->s } );
 		}
 	};
 	
@@ -278,6 +292,7 @@ namespace Ohm {
 		static void apply( const Input& in, std::vector<AST::StackItem> &v )
 		{
 			std::cerr << "Grammar: "<< in.string() << std::endl;
+			dumpStack( v );
 			
 			auto rules = pop_any<AST::Rule>(v);
 			auto super = pop<AST::SuperGrammar>(v);

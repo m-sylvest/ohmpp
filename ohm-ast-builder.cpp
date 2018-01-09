@@ -33,8 +33,7 @@ namespace Ohm {
 	{	
 		for( size_t i = 0; i<v.size() ; i++ )
 		{
-			std::cerr << "dS(" << i << "), index=" << v[i].index() << std::endl;
-			i++;
+			std::cerr << "dS(" << i << ") ~ " << typenameOf(v[i]) << std::endl;
 		}
 		std::cerr.flush();
 	}

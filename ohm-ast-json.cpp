@@ -58,7 +58,7 @@ namespace Ohm {
 								return json( {{ "Base", { 
 									{ "type", "Appl" }, 
 									{ "name", arg->name }, 
-									{ "Params", listp2json( arg->paramsAlts ) } 
+									{ "Params", listp2json( &arg->params->l ) } 
 								} }} );
 								break;
 
@@ -80,7 +80,7 @@ namespace Ohm {
 							case Ohm::AST::Base::Type::Alt:
 								return json( {{ "Base",  { 
 									{ "type", "Alt" }, 
-									{ "Alt", listp2json( arg->paramsAlts ) } 
+									{ "Alt", listp2json( &arg->alts->l ) } 
 								} }} );
 								break;
 
@@ -125,9 +125,14 @@ namespace Ohm {
 						} }} );
 					}							
 
-					else if constexpr (std::is_same_v<T, AST::ParamsAlt *>)
+					else if constexpr (std::is_same_v<T, AST::Params *>)
 					{
-						return json( {{ "Params", listp2json( arg ) }} );
+						return json( {{ "Params", listp2json( &arg->l ) }} );
+					}							
+
+					else if constexpr (std::is_same_v<T, AST::Alts *>)
+					{
+						return json( {{ "Alts", listp2json( &arg->l ) }} );
 					}							
 
 					else if constexpr (std::is_same_v<T, AST::RuleBody *>)
@@ -147,7 +152,7 @@ namespace Ohm {
 							{ "type",			typeMap[arg->type] },
 							{ "name",			arg->name },
 							{ "RuleDescr",	arg->rulesDescr },
-							{ "Params",		listp2json( arg->ruleParms ) },
+							{ "Params",		listp2json( &arg->ruleParms->l ) },
 							{ "RuleBody", listp2json( arg->ruleBody ) }
 						}	}} );
 					}

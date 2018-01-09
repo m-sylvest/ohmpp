@@ -84,7 +84,7 @@ namespace Ohm {
 								break;
 							}
 							case AST::Base::Type::Alt:
-								return templ( "SOR", to_pegtl(arg->paramsAlts) );
+								return templ( "SOR", to_pegtl(arg->alts) );
 								break;
 
 							default:	
@@ -152,7 +152,12 @@ namespace Ohm {
 						return templ( "SEQ", map_join(arg->seq, to_pegtl, ", " ) );
 					}							
 
-					else if constexpr (std::is_same_v<T, AST::ParamsAlt *>)
+					else if constexpr (std::is_same_v<T, AST::Params *>)
+					{
+						return "";
+					}							
+
+					else if constexpr (std::is_same_v<T, AST::Alts *>)
 					{
 						return "";
 					}							

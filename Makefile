@@ -6,7 +6,9 @@ deps = $(srcs:.cpp=.d)
 jsonver = 3.0.1
 
 pegtlver = 2.3.3
-pegtldir = ./PEGTL-$(pegtlver)/include/tao
+pegtlbase = PEGTL-$(pegtlver)
+pegtltgz = ./$(pegtlbase).tgz
+pegtldir = ./$(pegtlbase)/include/tao
 
 Catch2ver = 2.0.1
 
@@ -20,8 +22,8 @@ json/json.hpp:
 	wget -O json/json.hpp https://github.com/nlohmann/json/releases/download/v$(jsonver)/json.hpp
 	
 $(pegtldir)/pegtl.hpp:
-	wget https://github.com/taocpp/PEGTL/archive/$(pegtlver).tar.gz
-	tar xvf $(pegtlver).tar.gz
+	wget -O ./$(pegtltgz) https://github.com/taocpp/PEGTL/archive/$(pegtlver).tar.gz
+	tar xvf $(pegtltgz)
 
 catch/catch.hpp:
 	mkdir catch || true
