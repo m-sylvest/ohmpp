@@ -118,14 +118,36 @@ CSV4 {
 #endif  
 
 #if 1
+  SECTION( "Reduced CSV example from https://github.com/harc/ohm/blob/master/examples/csv/csv.ohm" )
+  {
+    char *text = (char *) R"(
+CSV {
+  csv = row (eol ~end row)* eol
+  row = col ("," col)*
+}
+)";
+    pegtl::argv_input<> in( &text, 0 );
+    std::vector<Ohm::AST::StackItem> v;
+    
+    REQUIRE( pegtl::parse< 
+      pegtl::must< 
+          Ohm::GRM::Grammars
+      >, 
+      Ohm::action, 
+      Ohm::control 
+    >( in, v ) == true );
+  }
+#endif  
+
+#if 1
   SECTION( "Full CSV example from https://github.com/harc/ohm/blob/master/examples/csv/csv.ohm" )
   {
     char *text = (char *) R"(
 CSV {
-  csv = row (eol ~end row)* eol -- t
-  row = col ("," col)* -- p
-  col = colChar*  -- c
-  colChar = ~(eol | ",") any 
+  csv = row (eol ~end row)* eol
+  row = col ("," col)*
+  col = colChar*
+  colChar = ~(eol | ",") any   
   eol = "\r"? "\n"
 }
 )";

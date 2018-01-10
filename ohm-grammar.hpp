@@ -59,6 +59,8 @@ namespace Ohm {
     //
     // Here comes the Ohm grammar in PEGTL parlance:
     //
+		// taken from https://github.com/harc/ohm/blob/master/src/ohm-grammar.ohm :
+		
 
     //  Grammars
     //    = Grammar*
@@ -126,7 +128,16 @@ namespace Ohm {
 
     //  Seq
     //    = Iter*
-    struct Seq : STAR<Iter> {};
+    struct Seq : 
+			STAR< 
+				not_at< 
+					seq<
+						plus<	sor<alnum,one<'_'> > >,
+						pad<one<'='>,space_>
+					>
+				>, 
+				Iter 
+			> {};
 		
     //  Iter
     //    = Pred "*"  -- star
@@ -217,7 +228,7 @@ namespace Ohm {
 				> 
 			>,
 			star< 
-				seq< alpha > 
+				seq< sor<alnum,one<'_'> > > 
 			>,
 			star< 
 				seq< 

@@ -37,6 +37,9 @@ namespace Ohm {
     template < typename ... T >
     struct OPT : pad< opt<T ...>, space_ > {};
 
+    template < typename ... T >
+    struct PAD : pad< T ..., space_ > {};
+
     // NonEmptyListOf:
     template < typename T, typename P >
     struct NonEmptyListOf : pad< list< T, P >, space_ > {};
