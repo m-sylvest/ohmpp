@@ -130,12 +130,18 @@ namespace Ohm {
     //    = Iter*
     struct Seq : 
 			STAR< 
+#if 1
 				not_at< 
-					seq<
-						plus<	sor<alnum,one<'_'> > >,
-						pad<one<'='>,space_>
+					sor<
+						seq<
+							plus<	sor<alnum,one<'_'> > >,
+							pad<one<'='>,space_>
+						>,
+						string<':','='>,
+						string<'+','='>
 					>
 				>, 
+#endif
 				Iter 
 			> {};
 		
@@ -192,19 +198,31 @@ namespace Ohm {
 		struct Base_Range: SEQ< oneCharTerminal, string<'.','.'>, oneCharTerminal > {};
 		
 		struct Base_Appl : 
-			seq< 
+			SEQ< 
 				ident, 
-				opt<Params>, 
-				not_at< 
+				opt<Params>
+#if 0
+				, not_at< 
 					sor< 
 						seq< 
-							opt<ruleDescr>, 
-							one<'='> 
+							// optional ruleDesc: "(" any* ")"
+							opt<
+								seq< 
+									one<'('>, 
+									star< 
+										not_at< one<')'> >, 
+										any 
+									>, 
+									one<')'> 
+								>
+							>,
+							pad< one<'='>, space_ >
 						>, 
 						string<':', '=' >, 
 						string<'+', '='> 
 					> 
 				>
+#endif
 			> {};
 			
 		struct Lex_Base: seq<Base> {};
